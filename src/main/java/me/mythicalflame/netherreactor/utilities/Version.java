@@ -1,11 +1,12 @@
 package me.mythicalflame.netherreactor.utilities;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 /**
  * This class represents a NetherReactor API version.
  */
-public class Version
+public final class Version
 {
     /**
      * The major version number.
@@ -22,6 +23,7 @@ public class Version
     /**
      * The release metadata.
      */
+    @Nonnull
     private final String releaseData;
 
     /**
@@ -40,12 +42,14 @@ public class Version
     }
 
     /**
+     * Constructs a Version object with a custom release metadata.
+     *
      * @param major The major version number.
      * @param minor The minor version number.
      * @param patch The patch version number.
      * @param releaseData The release metadata.
      */
-    public Version(int major, int minor, int patch, String releaseData)
+    public Version(int major, int minor, int patch, @Nonnull String releaseData)
     {
         this.major = major;
         this.minor = minor;
@@ -54,6 +58,8 @@ public class Version
     }
 
     /**
+     * Gets the major number of the version.
+     *
      * @return The major version number.
      */
     public int getMajor()
@@ -62,6 +68,8 @@ public class Version
     }
 
     /**
+     * Gets the minor number of the version.
+     *
      * @return The minor version number.
      */
     public int getMinor()
@@ -70,6 +78,8 @@ public class Version
     }
 
     /**
+     * Gets the patch number of the version.
+     *
      * @return The patch version number.
      */
     public int getPatch()
@@ -78,13 +88,20 @@ public class Version
     }
 
     /**
+     * Gets the release metadata of the version.
+     *
      * @return The release metadata.
      */
-    public String getReleaseData()
+    public @Nonnull String getReleaseData()
     {
         return releaseData;
     }
 
+    /**
+     * Overrides Object#toString.
+     *
+     * @return A string in the format of "vmajor.minor.patch-releaseData".
+     */
     @Override
     public String toString()
     {

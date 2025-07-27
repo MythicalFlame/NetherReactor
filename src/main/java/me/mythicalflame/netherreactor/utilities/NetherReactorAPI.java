@@ -1,74 +1,18 @@
 package me.mythicalflame.netherreactor.utilities;
 
 import me.mythicalflame.netherreactor.NetherReactorModLoader;
-import me.mythicalflame.netherreactor.items.ModdedArmorPiece;
-import me.mythicalflame.netherreactor.items.ModdedArmorSet;
-import me.mythicalflame.netherreactor.items.ModdedItem;
+import me.mythicalflame.netherreactor.content.Mod;
+import me.mythicalflame.netherreactor.content.ModdedItem;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collection;
 
-public class NetherReactorAPI
+public final class NetherReactorAPI
 {
-    private static final ArmorChoice emptyArmorChoice = new ArmorChoice(new ModdedArmorPiece[]{});
-
-    /**
-     * @param player The player to check.
-     * @param set The set to check for.
-     * @return Whether the player is wearing the set.
-     */
-    public static boolean isWearingSet(Player player, ModdedArmorSet set)
-    {
-        //checks (choice == null -> any accepted, choice == [] -> empty slot accepted only)
-        for (int i = 0; i < 4; i++)
-        {
-            ArmorChoice choice = set.getChoices()[i];
-
-            if (choice != null)
-            {
-                ItemStack playerArmor = switch (i)
-                {
-                    case 0 -> player.getInventory().getHelmet();
-                    case 1 -> player.getInventory().getChestplate();
-                    case 2 -> player.getInventory().getLeggings();
-                    case 3 -> player.getInventory().getBoots();
-                    default -> null;
-                };
-
-                if (choice.equals(emptyArmorChoice))
-                {
-                    if (playerArmor != null)
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (playerArmor == null)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        ModdedItem pieceFound = NetherReactorAPI.getModdedItem(playerArmor, Arrays.asList(choice.armors()));
-
-                        if (pieceFound == null)
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-
-        return true;
-    }
-
     /**
      * Searches for a ModdedItem given its properties.
      *
@@ -76,25 +20,10 @@ public class NetherReactorAPI
      * @param ID The ID of the item.
      * @return The ModdedItem found, or null if none were found.
      */
+    @Nullable
     public static ModdedItem getModdedItem(String namespace, String ID)
     {
-        for (Mod mod : NetherReactorModLoader.getRegisteredMods())
-        {
-            if (namespace.equalsIgnoreCase(mod.getNamespace()))
-            {
-                for (ModdedItem item : mod.getRegisteredItems())
-                {
-                    if (item.getNamespace().equalsIgnoreCase(namespace) && item.getID().equalsIgnoreCase(ID))
-                    {
-                        return item;
-                    }
-                }
-
-                return null;
-            }
-        }
-
-        return null;
+        return ModRegister.getCachedItem(namespace + ":" + ID);
     }
 
     /**
@@ -103,56 +32,59 @@ public class NetherReactorAPI
      * @param stack The ItemStack representation of the ModdedItem.
      * @return The ModdedItem found, or null if none were found.
      */
-    public static ModdedItem getModdedItem(ItemStack stack)
+    @Nullable
+    public static ModdedItem getModdedItem(@Nonnull ItemStack stack)
     {
-        if (stack == null || stack.getType() == Material.AIR || !Objects.requireNonNull(stack.getItemMeta()).getPersistentDataContainer().has(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING))
+        if (stack.getType() == Material.AIR)
         {
             return null;
         }
 
-        String stackContent = stack.getItemMeta().getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING);
-        assert stackContent != null;
-
-        for (Mod mod : NetherReactorModLoader.getRegisteredMods())
+        if (stack.getPersistentDataContainer().has(NetherReactorModLoader.getContentKey()))
         {
-            for (ModdedItem item : mod.getRegisteredItems())
-            {
-                if (stackContent.equals(Objects.requireNonNull(item.getItem().getItemMeta()).getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING)))
-                {
-                    return item;
-                }
-            }
+            return null;
         }
 
-        return null;
+
+        String stackContent = stack.getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING);
+        return ModRegister.getCachedItem(stackContent);
     }
 
     /**
-     * Searches for a ModdedItem within a list.
+     * Searches for a ModdedItem within a collection.
      *
      * @param stack The ItemStack representation of the ModdedItem.
-     * @param list The list to search.
+     * @param collection The collection to search.
      * @return The ModdedItem found, or null if none were found.
      */
-    public static ModdedItem getModdedItem(ItemStack stack, List<ModdedItem> list)
+    @Nullable
+    public static ModdedItem getModdedItem(@Nonnull ItemStack stack, @Nonnull Collection<ModdedItem> collection)
     {
-        if (stack == null || stack.getType() == Material.AIR || !Objects.requireNonNull(stack.getItemMeta()).getPersistentDataContainer().has(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING))
+        if (stack.getType() == Material.AIR)
         {
             return null;
         }
 
-        String stackContent = stack.getItemMeta().getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING);
-        assert stackContent != null;
-
-        for (ModdedItem item : list)
+        if (stack.getPersistentDataContainer().has(NetherReactorModLoader.getContentKey()))
         {
-            if (stackContent.equals(Objects.requireNonNull(item.getItem().getItemMeta()).getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING)))
-            {
-                return item;
-            }
+            return null;
         }
 
-        return null;
+
+        String stackContent = stack.getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING);
+        ModdedItem item = ModRegister.getCachedItem(stackContent);
+        if (item == null)
+        {
+            return null;
+        }
+        if (collection.contains(item))
+        {
+            return item;
+        }
+        else
+        {
+            return null;
+        }
     }
 
     /**
@@ -161,17 +93,10 @@ public class NetherReactorAPI
      * @param namespace The namespace to search with.
      * @return The Mod found, or null if none were found.
      */
+    @Nullable
     public static Mod getMod(String namespace)
     {
-        for (Mod m : NetherReactorModLoader.getRegisteredMods())
-        {
-            if (m.getNamespace().equalsIgnoreCase(namespace))
-            {
-                return m;
-            }
-        }
-
-        return null;
+        return ModRegister.getCachedMod(namespace);
     }
 
     /**
@@ -180,16 +105,10 @@ public class NetherReactorAPI
      * @param moddedItem The ModdedItem to search with.
      * @return The Mod found, or null if none were found.
      */
-    public static Mod getMod(ModdedItem moddedItem)
+    @Nullable
+    public static Mod getMod(@Nonnull ModdedItem moddedItem)
     {
-        for (Mod m : NetherReactorModLoader.getRegisteredMods())
-        {
-            if (m.getNamespace().equalsIgnoreCase(moddedItem.getNamespace()))
-            {
-                return m;
-            }
-        }
-
-        return null;
+        String namespace = moddedItem.getNamespace();
+        return ModRegister.getCachedMod(namespace);
     }
 }

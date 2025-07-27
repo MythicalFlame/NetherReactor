@@ -7,5 +7,3 @@ shutDownServerOnError:
   modVersionError: true
   # Thrown when a mod is registered but its namespace is already being used
   modNamespaceCollision: true
-  # Thrown when a mod is registered but its content uses multiple namespaces
-  modDoubleNamespaces: true

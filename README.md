@@ -2,11 +2,22 @@
 Very experimental and new, lacking many features.
 
 ## Usage
-Add the release jar as a plugin on your server, and as a dependency for your new plugin.  
-**NEW:** [Javadoc for the latest version](https://mythicalflame.github.io)
+Add the release jar as a plugin on your server, and as a dependency for your new plugin (see below for more info).
+
+### Version Guide
+Recently, the plugin has been re-written to only support Paper. Along with this, the modding system has been completely rewritten. Mods for v0.7.x and v0.8.x are not compatible in any way.  
+If you are still using Spigot, or are using older Paper versions that don't support the component API, you can use the 0.7.x versions. Note that 0.7.x versions are not supported and will not receive bug fixes.  
+
+| Platform | Minecraft Version | NetherReactor Version |
+|----------|-------------------|-----------------------|
+| Spigot   | 1.18.2+           | v0.7.2                |
+| Paper    | 1.18.2-1.20.3     | v0.7.2                |
+| Paper    | 1.20.4+           | v0.8.0                |
+
 
 ## Developer Guide
-I'm working on replacing this with a wiki.
+I'm working on replacing this with a wiki. The guide below was written for v0.7.x.  
+[Javadoc (for an outdated version, sometime around v0.5.x)](https://mythicalflame.github.io)
 
 ### Custom Items
 Currently, items can either be a regular item, a consumable, or a custom armor piece (custom armor covered in the next section).
@@ -54,23 +65,36 @@ Registration example (with the steel armor set from above):
 
 ```java
 
-import me.mythicalflame.netherreactor.utilities.Mod;
+import me.mythicalflame.netherreactor.content.Mod;
 import me.mythicalflame.netherreactor.utilities.Version;
 
 ...
 
 Mod mod = new Mod("morearmors", "More Armors!", new Version(0, 7, 0));
-mod.registerItem(new ModdedItemSteelHelmet());
-mod.registerItem(new ModdedItemSteelChestplate());
-mod.registerItem(new ModdedItemSteelLeggings());
-mod.registerItem(new ModdedItemSteelBoots());
-mod.registerArmor(new ModdedArmorSetSteelSet());
-NetherReactor.registerMod(mod);
+mod.
+
+registerItem(new ModdedItemSteelHelmet());
+        mod.
+
+registerItem(new ModdedItemSteelChestplate());
+        mod.
+
+registerItem(new ModdedItemSteelLeggings());
+        mod.
+
+registerItem(new ModdedItemSteelBoots());
+        mod.
+
+registerArmor(new ModdedArmorSetSteelSet());
+        NetherReactor.
+
+registerMod(mod);
 ```
 
-### Features yet to be implemented
-#### Tools with custom durability and potentially a weapons class (extending ModdedItem)
-#### Custom Entities
-Not supported yet, medium priority.
-#### Custom Blocks
-Will take a lot of work, for now you can create a customItem for minimal functionality, but it will become a regular block when you place it. Experimental API expected in 0.8.0
+### Future plans
+#### v0.8.x
+Current version, migration to paper and API rewrite
+#### v0.9.x/v0.10.x
+Custom block support and world generation stuff
+#### v0.11.x and beyond
+Custom entities

@@ -1,24 +1,36 @@
 name: NetherReactor
 version: '${project.version}'
 main: me.mythicalflame.netherreactor.NetherReactorModLoader
-api-version: 1.18
+api-version: '1.21.4'
 load: STARTUP
 authors: [ MythicalFlame ]
-description: Spigot modding framework for custom blocks and items
+description: Modding framework for custom items
 commands:
   netherreactor:
     description: Main command for NetherReactor
     usage: /netherreactor <subCommand>
 permissions:
-  netherreactor.commandnetherreactor.give:
+  netherreactor.command.netherreactor.give:
     description: Allows the user to use the netherreactor give command to give custom items.
     default: op
-  netherreactor.commandnetherreactor.items:
+  netherreactor.command.netherreactor.items:
     description: Allows the user to use the netherreactor items command to see the list of registered items.
     default: true
-  netherreactor.commandnetherreactor.item:
+  netherreactor.command.netherreactor.item:
     description: Allows the user to use the netherreactor item command to inspect an item.
     default: true
-  netherreactor.commandnetherreactor.*:
+  netherreactor.command.netherreactor.mods:
+    description: Allows the user to use the netherreactor mods command to see the list of registered mods.
+    default: true
+  netherreactor.command.netherreactor.mod:
+    description: Allows the user to use the netherreactor mod command to inspect a mod.
+    default: true
+  netherreactor.command.netherreactor.creative:
+    description: Allows the user to use the netherreactor creative command to open the creative inventory.
+    default: false
+  netherreactor.command.netherreactor.itemlookup:
+    description: Allows the user to use the netherreactor itemlookup command to open the item lookup interface.
+    default: true
+  netherreactor.command.netherreactor.*:
     description: Allows the user to use the netherreactor command and its subcommands.
     default: false
