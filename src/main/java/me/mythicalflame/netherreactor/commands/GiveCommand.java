@@ -11,11 +11,11 @@ import org.bukkit.inventory.ItemStack;
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 import static net.kyori.adventure.text.Component.text;
 
-public final class GiveSubCommand
+public final class GiveCommand
 {
-    public static void giveSubCommand(CommandSender sender, String[] args)
+    public static void giveCommand(CommandSender sender, String[] args)
     {
-        if (!sender.hasPermission("netherreactor.command.netherreactor.give"))
+        if (!sender.hasPermission("netherreactor.command.give"))
         {
             sender.sendMessage(minimessage("<red>You do not have permission to use the netherreactor give command!</red>"));
             return;
@@ -66,7 +66,7 @@ public final class GiveSubCommand
         receiver.getInventory().addItem(giveItem);
 
         TextComponent.Builder result = text();
-        result.append(minimessage("Gave " + itemAmount + "["));
+        result.append(minimessage("Gave " + itemAmount + " ["));
         result.append(itemFound.getItemName());
         result.append(minimessage("] to " + args[1]));
         sender.sendMessage(result);

@@ -10,6 +10,7 @@ import me.mythicalflame.netherreactor.NetherReactorModLoader;
 import me.mythicalflame.netherreactor.creative.CreativeTab;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemRarity;
@@ -54,17 +55,18 @@ public abstract class ModdedItem
      * The maximum stack size of the item. For technical reasons, this cannot not exceed 99.
      */
     @Nonnegative
-    private int maxStackSize = 64;
+    private int maxStackSize;
     /**
      * The maximum damage (durability) the item can endure.
      */
     @Nonnegative
-    private int maxDamage = 0;
+    private int maxDamage;
     /**
      * The component used as the name of the item.
      */
     @Nonnull
     private Component itemName;
+
     /**
      * The lore of the item. For technical reasons, the line count cannot exceed 255.
      */
@@ -75,22 +77,22 @@ public abstract class ModdedItem
      * The rarity of the item.
      */
     @Nonnull
-    private ItemRarity rarity = ItemRarity.COMMON;
+    private ItemRarity rarity;
     /**
-     * The consumable component of the item. Use null (default) to disable. For reference, you can create a Consumable object by calling Consumable.consumable().build().
+     * The consumable component of the item. Use null to disable. For reference, you can create a Consumable object by calling Consumable.consumable().build().
      */
     @Nullable
-    private Consumable consumableComponent = null;
+    private Consumable consumableComponent;
     /**
-     * The consumable component of the item. Use null (default) to disable. This requires consumableComponent to be non-null to take effect. For reference, you can create a FoodProperties object by calling FoodProperties.food().build().
+     * The consumable component of the item. Use null to disable. This requires consumableComponent to be non-null to take effect. For reference, you can create a FoodProperties object by calling FoodProperties.food().build().
      */
     @Nullable
-    private FoodProperties foodComponent = null;
+    private FoodProperties foodComponent;
     /**
-     * The tool component of the item. Use null (default) to disable. For reference, you can create a Tool object by calling Tool.tool().build().
+     * The tool component of the item. Use null to disable. For reference, you can create a Tool object by calling Tool.tool().build().
      */
     @Nullable
-    private Tool toolComponent = null;
+    private Tool toolComponent;
     /**
      * The chance for an item to successfully raise the level of a composter, from 0 to 100.
      */
@@ -121,7 +123,14 @@ public abstract class ModdedItem
         this.NAMESPACE = namespace.toLowerCase();
         this.ID = id.toLowerCase();
         this.MATERIAL = material;
-        this.itemName = material.getDefaultData(DataComponentTypes.ITEM_NAME);
+        this.maxStackSize = MATERIAL.getDefaultData(DataComponentTypes.MAX_STACK_SIZE);
+        this.maxDamage = MATERIAL.getDefaultData(DataComponentTypes.MAX_DAMAGE) == null ? 0 : MATERIAL.getDefaultData(DataComponentTypes.MAX_DAMAGE);
+        this.itemName = MATERIAL.getDefaultData(DataComponentTypes.ITEM_NAME);
+        //attack damage
+        this.rarity = MATERIAL.getDefaultData(DataComponentTypes.RARITY);
+        this.consumableComponent = MATERIAL.getDefaultData(DataComponentTypes.CONSUMABLE);
+        this.foodComponent = MATERIAL.getDefaultData(DataComponentTypes.FOOD);
+        this.toolComponent = MATERIAL.getDefaultData(DataComponentTypes.TOOL);
 /*
         ItemStack constructorItemStack = new ItemStack(material);
 
@@ -174,6 +183,7 @@ public abstract class ModdedItem
             stack.unsetData(DataComponentTypes.MAX_DAMAGE);
         }
         stack.setData(DataComponentTypes.ITEM_NAME, itemName);
+        stack.setData(DataComponentTypes.ITEM_MODEL, new NamespacedKey("e", "e"));
         //ItemAttributeModifiers defaultAttributes = MATERIAL.getDefaultData(DataComponentTypes.ATTRIBUTE_MODIFIERS);
         //ItemAttributeModifiers.itemAttributes().addModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier("", attackDamage, AttributeModifier.Operation.ADD_NUMBER), EquipmentSlotGroup.MAINHAND)
         //stack.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, defaultAttributes);
@@ -228,6 +238,17 @@ public abstract class ModdedItem
     public final String getID()
     {
         return ID;
+    }
+
+    /**
+     * Gets the technical name (namespace:id) of the item.
+     *
+     * @return The technical name of this item.
+     */
+    @Nonnull
+    public final String getTechnicalName()
+    {
+        return NAMESPACE + ":" + ID;
     }
 
     /**

@@ -1,10 +1,10 @@
 package me.mythicalflame.netherreactor.listeners;
 
-import io.papermc.paper.event.entity.EntityCompostItemEvent;
 import me.mythicalflame.netherreactor.content.ModdedItem;
 import me.mythicalflame.netherreactor.utilities.NetherReactorAPI;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Levelled;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -29,7 +29,9 @@ public final class CompostingWatcher implements Listener
                     int rng = (int) (Math.random() * 100);
                     if (rng < chance)
                     {
-                        new EntityCompostItemEvent(event.getPlayer(), block, event.getItem(), true).callEvent();
+                        Levelled level = (Levelled) block.getBlockData();
+                        level.setLevel(level.getLevel() + 1);
+                        block.setBlockData(level);
                     }
                 }
             }

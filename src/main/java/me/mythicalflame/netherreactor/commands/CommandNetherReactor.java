@@ -13,6 +13,7 @@ import static net.kyori.adventure.text.Component.text;
 public final class CommandNetherReactor implements CommandExecutor
 {
     private final SubCommand[] commandList = {
+            new SubCommand("about", "Gives details about the plugin."),
             new SubCommand("give", "Gives items and blocks."),
             new SubCommand("items", "Displays all registered items."),
             new SubCommand("item", "Displays information about an item."),
@@ -30,25 +31,30 @@ public final class CommandNetherReactor implements CommandExecutor
 
         switch (args[0].toLowerCase())
         {
-            case "items" -> ItemsSubCommand.itemsSubCommand(sender, args);
-            case "item" -> ItemSubCommand.itemSubCommand(sender, args);
-            case "give" -> GiveSubCommand.giveSubCommand(sender, args);
-            case "mod" -> ModSubCommand.modSubCommand(sender, args);
-            case "mods" -> ModsSubCommand.modsSubCommand(sender, args);
+            case "about" -> AboutCommand.aboutCommand(sender, args);
+            case "items" -> ItemsCommand.itemsCommand(sender, args);
+            case "item" -> ItemCommand.itemCommand(sender, args);
+            case "give" -> GiveCommand.giveCommand(sender, args);
+            case "mod" -> ModCommand.modCommand(sender, args);
+            case "mods" -> ModsCommand.modsCommand(sender, args);
             default -> helpMessage(sender);
         }
 
         return true;
     }
 
-    //helper methods
-    public void helpMessage(CommandSender sender)
+    private void helpMessage(CommandSender sender)
     {
         TextComponent.Builder result = text();
-        text().append(minimessage("<gold>NetherReactor commands help:</gold>\n"));
-        for (SubCommand command : commandList)
+        result.append(minimessage("<gold>NetherReactor commands help:</gold>\n"));
+        for (int i = 0; i < commandList.length; ++i)
         {
-            text().append(minimessage("<dark_green>/netherreactor " + command.name() + " </dark_green>" + command.description() + "\n"));
+            SubCommand command = commandList[i];
+            result.append(minimessage("<dark_green>/netherreactor " + command.name() + " </dark_green>" + command.description()));
+            if (i != commandList.length - 1)
+            {
+                result.append(minimessage("\n"));
+            }
         }
         sender.sendMessage(result.build());
     }

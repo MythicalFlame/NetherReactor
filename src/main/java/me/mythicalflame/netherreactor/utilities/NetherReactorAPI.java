@@ -7,7 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 
@@ -21,8 +20,13 @@ public final class NetherReactorAPI
      * @return The ModdedItem found, or null if none were found.
      */
     @Nullable
-    public static ModdedItem getModdedItem(String namespace, String ID)
+    public static ModdedItem getModdedItem(@Nullable String namespace, @Nullable String ID)
     {
+        if (namespace == null || ID == null)
+        {
+            return null;
+        }
+
         return ModRegister.getCachedItem(namespace + ":" + ID);
     }
 
@@ -33,18 +37,22 @@ public final class NetherReactorAPI
      * @return The ModdedItem found, or null if none were found.
      */
     @Nullable
-    public static ModdedItem getModdedItem(@Nonnull ItemStack stack)
+    public static ModdedItem getModdedItem(@Nullable ItemStack stack)
     {
+        if (stack == null)
+        {
+            return null;
+        }
+
         if (stack.getType() == Material.AIR)
         {
             return null;
         }
 
-        if (stack.getPersistentDataContainer().has(NetherReactorModLoader.getContentKey()))
+        if (!stack.getPersistentDataContainer().has(NetherReactorModLoader.getContentKey()))
         {
             return null;
         }
-
 
         String stackContent = stack.getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING);
         return ModRegister.getCachedItem(stackContent);
@@ -58,18 +66,22 @@ public final class NetherReactorAPI
      * @return The ModdedItem found, or null if none were found.
      */
     @Nullable
-    public static ModdedItem getModdedItem(@Nonnull ItemStack stack, @Nonnull Collection<ModdedItem> collection)
+    public static ModdedItem getModdedItem(@Nullable ItemStack stack, @Nullable Collection<ModdedItem> collection)
     {
+        if (stack == null || collection == null)
+        {
+            return null;
+        }
+
         if (stack.getType() == Material.AIR)
         {
             return null;
         }
 
-        if (stack.getPersistentDataContainer().has(NetherReactorModLoader.getContentKey()))
+        if (!stack.getPersistentDataContainer().has(NetherReactorModLoader.getContentKey()))
         {
             return null;
         }
-
 
         String stackContent = stack.getPersistentDataContainer().get(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING);
         ModdedItem item = ModRegister.getCachedItem(stackContent);
@@ -94,8 +106,13 @@ public final class NetherReactorAPI
      * @return The Mod found, or null if none were found.
      */
     @Nullable
-    public static Mod getMod(String namespace)
+    public static Mod getMod(@Nullable String namespace)
     {
+        if (namespace == null)
+        {
+            return null;
+        }
+
         return ModRegister.getCachedMod(namespace);
     }
 
@@ -106,8 +123,13 @@ public final class NetherReactorAPI
      * @return The Mod found, or null if none were found.
      */
     @Nullable
-    public static Mod getMod(@Nonnull ModdedItem moddedItem)
+    public static Mod getMod(@Nullable ModdedItem moddedItem)
     {
+        if (moddedItem == null)
+        {
+            return null;
+        }
+
         String namespace = moddedItem.getNamespace();
         return ModRegister.getCachedMod(namespace);
     }

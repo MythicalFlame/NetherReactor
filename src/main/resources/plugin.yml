@@ -10,27 +10,30 @@ commands:
     description: Main command for NetherReactor
     usage: /netherreactor <subCommand>
 permissions:
-  netherreactor.command.netherreactor.give:
+  netherreactor.command.about:
+    description: Allows the user to use the netherreactor about command to see info about the plugin.
+    default: true
+  netherreactor.command.give:
     description: Allows the user to use the netherreactor give command to give custom items.
     default: op
-  netherreactor.command.netherreactor.items:
+  netherreactor.command.items:
     description: Allows the user to use the netherreactor items command to see the list of registered items.
     default: true
-  netherreactor.command.netherreactor.item:
+  netherreactor.command.item:
     description: Allows the user to use the netherreactor item command to inspect an item.
     default: true
-  netherreactor.command.netherreactor.mods:
+  netherreactor.command.mods:
     description: Allows the user to use the netherreactor mods command to see the list of registered mods.
     default: true
-  netherreactor.command.netherreactor.mod:
+  netherreactor.command.mod:
     description: Allows the user to use the netherreactor mod command to inspect a mod.
     default: true
-  netherreactor.command.netherreactor.creative:
+  netherreactor.command.creative:
     description: Allows the user to use the netherreactor creative command to open the creative inventory.
     default: false
-  netherreactor.command.netherreactor.itemlookup:
-    description: Allows the user to use the netherreactor itemlookup command to open the item lookup interface.
+  netherreactor.command.itemlookup:
+    description: Allows the user to use the netherreactor itemlookup command (and its various aliases) to open the item lookup interface.
     default: true
-  netherreactor.command.netherreactor.*:
-    description: Allows the user to use the netherreactor command and its subcommands.
+  netherreactor.command.*:
+    description: Allows the user to use the all netherreactor commands.
     default: false

@@ -10,11 +10,11 @@ import org.bukkit.command.CommandSender;
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 import static net.kyori.adventure.text.Component.text;
 
-public final class ModSubCommand
+public final class ModCommand
 {
-    public static void modSubCommand(CommandSender sender, String[] args)
+    public static void modCommand(CommandSender sender, String[] args)
     {
-        if (!sender.hasPermission("netherreactor.command.netherreactor.mod"))
+        if (!sender.hasPermission("netherreactor.command.mod"))
         {
             sender.sendMessage(minimessage("<red>You do not have permission to use the netherreactor mod command!</red>"));
             return;

@@ -8,11 +8,11 @@ import org.bukkit.command.CommandSender;
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 import static net.kyori.adventure.text.Component.text;
 
-public final class ModsSubCommand
+public final class ModsCommand
 {
-    public static void modsSubCommand(CommandSender sender, String[] args)
+    public static void modsCommand(CommandSender sender, String[] args)
     {
-        if (!sender.hasPermission("netherreactor.command.netherreactor.mods"))
+        if (!sender.hasPermission("netherreactor.command.mods"))
         {
             sender.sendMessage(minimessage("<red>You do not have permission to use the netherreactor mods command!</red>"));
             return;
@@ -26,14 +26,21 @@ public final class ModsSubCommand
 
         TextComponent.Builder result = text();
         result.append(minimessage("<gold>NetherReactor Registered Mods: </gold>"));
-        for (int i = 0; i < NetherReactorModLoader.getRegisteredMods().size(); i++)
+        if (NetherReactorModLoader.getRegisteredMods().isEmpty())
         {
-            Mod mod = NetherReactorModLoader.getRegisteredMods().get(i);
-            result.append(minimessage(mod.toString()));
-
-            if (i < NetherReactorModLoader.getRegisteredMods().size() - 1)
+            result.append(minimessage("None"));
+        }
+        else
+        {
+            for (int i = 0; i < NetherReactorModLoader.getRegisteredMods().size(); i++)
             {
-                result.append(minimessage(", "));
+                Mod mod = NetherReactorModLoader.getRegisteredMods().get(i);
+                result.append(minimessage(mod.toString()));
+
+                if (i < NetherReactorModLoader.getRegisteredMods().size() - 1)
+                {
+                    result.append(minimessage(", "));
+                }
             }
         }
 

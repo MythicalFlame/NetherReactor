@@ -7,11 +7,11 @@ import org.bukkit.command.CommandSender;
 
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 
-public final class ItemSubCommand
+public final class ItemCommand
 {
-    public static void itemSubCommand(CommandSender sender, String[] args)
+    public static void itemCommand(CommandSender sender, String[] args)
     {
-        if (!sender.hasPermission("netherreactor.command.netherreactor.item"))
+        if (!sender.hasPermission("netherreactor.command.item"))
         {
             sender.sendMessage(minimessage("<red>You do not have permission to use the netherreactor item command!</red>"));
             return;

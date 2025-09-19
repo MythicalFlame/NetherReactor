@@ -11,6 +11,7 @@ import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 public final class CreativeGui extends Gui
 {
     private final AdvancedSlotManager asm = new AdvancedSlotManager(this);
+    //private final PaginationManager pm = new PaginationManager(this);
 
     public CreativeGui(Player player)
     {
@@ -26,6 +27,6 @@ public final class CreativeGui extends Gui
     private void mainMenu()
     {
         fillGui(Material.AIR);
-
+        //fillRow(, 5);
     }
 }

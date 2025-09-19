@@ -6,16 +6,17 @@ import org.bukkit.inventory.ItemStack;
 
 public final class CreativeTabs
 {
-    public final BuildingTab BUILDING_BLOCKS = new BuildingTab();
-    public final ColoredTab COLORED_BLOCKS = new ColoredTab();
-    public final NaturalTab NATURAL_BLOCKS = new NaturalTab();
-    public final FunctionalTab FUNCTIONAL_BLOCKS = new FunctionalTab();
-    public final RedstoneTab REDSTONE_BLOCKS = new RedstoneTab();
-    public final ToolsTab TOOLS_AND_UTILITIES = new ToolsTab();
-    public final CombatTab COMBAT = new CombatTab();
-    public final FoodTab FOODS_AND_DRINKS = new FoodTab();
-    public final IngredientsTab INGREDIENTS = new IngredientsTab();
-    public final SpawnEggsTab SPAWN_EGGS = new SpawnEggsTab();
+    public static final BuildingTab BUILDING_BLOCKS = new BuildingTab();
+    public static final ColoredTab COLORED_BLOCKS = new ColoredTab();
+    public static final NaturalTab NATURAL_BLOCKS = new NaturalTab();
+    public static final FunctionalTab FUNCTIONAL_BLOCKS = new FunctionalTab();
+    public static final RedstoneTab REDSTONE_BLOCKS = new RedstoneTab();
+    public static final ToolsTab TOOLS_AND_UTILITIES = new ToolsTab();
+    public static final CombatTab COMBAT = new CombatTab();
+    public static final FoodTab FOODS_AND_DRINKS = new FoodTab();
+    public static final IngredientsTab INGREDIENTS = new IngredientsTab();
+    public static final SpawnEggsTab SPAWN_EGGS = new SpawnEggsTab();
+
     public static class BuildingTab extends CreativeTab
     {
         public BuildingTab()

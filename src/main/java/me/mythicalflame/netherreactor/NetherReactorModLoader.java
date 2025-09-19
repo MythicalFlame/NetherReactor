@@ -2,6 +2,7 @@ package me.mythicalflame.netherreactor;
 
 import me.mythicalflame.netherreactor.commands.CommandNetherReactor;
 import me.mythicalflame.netherreactor.content.Mod;
+import me.mythicalflame.netherreactor.creative.TabManager;
 import me.mythicalflame.netherreactor.utilities.ModRegister;
 import me.mythicalflame.netherreactor.utilities.Version;
 import org.bukkit.NamespacedKey;
@@ -27,12 +28,12 @@ public final class NetherReactorModLoader extends JavaPlugin
         logger = getLogger();
         contentKey = new NamespacedKey(this, "content");
 
-        //Set up configuration
         getConfig().options().copyDefaults();
         saveDefaultConfig();
 
-        //Enable commands
         getCommand("netherreactor").setExecutor(new CommandNetherReactor());
+
+        getServer().getPluginManager().registerEvents(new TabManager(), this);
 
         logger.info("Finished starting up!");
     }

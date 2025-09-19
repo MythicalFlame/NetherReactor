@@ -9,11 +9,11 @@ import org.bukkit.command.CommandSender;
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 import static net.kyori.adventure.text.Component.text;
 
-public final class ItemsSubCommand
+public final class ItemsCommand
 {
-    public static void itemsSubCommand(CommandSender sender, String[] args)
+    public static void itemsCommand(CommandSender sender, String[] args)
     {
-        if (!sender.hasPermission("netherreactor.command.netherreactor.items"))
+        if (!sender.hasPermission("netherreactor.command.items"))
         {
             sender.sendMessage(minimessage("<red>You do not have permission to use the netherreactor items command!</red>"));
             return;
@@ -26,14 +26,16 @@ public final class ItemsSubCommand
         }
 
         TextComponent.Builder result = text();
-        text().append(minimessage("<gold>NetherReactor Registered Items:</gold>\n"));
+        result.append(minimessage("<gold>NetherReactor Registered Items: </gold>"));
 
+        boolean hasItems = false;
         for (int i = 0; i < NetherReactorModLoader.getRegisteredMods().size(); i++)
         {
             Mod mod = NetherReactorModLoader.getRegisteredMods().get(i);
 
             for (int j = 0; j < mod.getRegisteredItems().size(); j++)
             {
+                hasItems = true;
                 ModdedItem item = mod.getRegisteredItems().get(j);
                 result.append(minimessage(item.getNamespace() + ":" + item.getID()));
 
@@ -42,6 +44,11 @@ public final class ItemsSubCommand
                     result.append(minimessage(", "));
                 }
             }
+        }
+
+        if (!hasItems)
+        {
+            result.append(minimessage("None"));
         }
 
         sender.sendMessage(result.build());
