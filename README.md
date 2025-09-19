@@ -1,5 +1,7 @@
 # NetherReactor Library
-Very experimental and new, lacking many features.
+Allows custom content like armors and items to be added to Minecraft servers in a server-sided way, so that clients don't need to add client side mods (only a resource pack).  
+Very experimental and new, lacking many features.  
+The current dev branch (0.8.0) is still missing some features/has regressions compared to v0.7.2, which will be fixed before the full launch.  
 
 ## Usage
 Add the release jar as a plugin on your server, and as a dependency for your new plugin (see below for more info).
@@ -11,8 +13,8 @@ If you are still using Spigot, or are using older Paper versions that don't supp
 | Platform | Minecraft Version | NetherReactor Version |
 |----------|-------------------|-----------------------|
 | Spigot   | 1.18.2+           | v0.7.2                |
-| Paper    | 1.18.2-1.20.3     | v0.7.2                |
-| Paper    | 1.20.4+           | v0.8.0                |
+| Paper    | 1.18.2-1.21.3     | v0.7.2                |
+| Paper    | 1.21.4+           | v0.8.0                |
 
 
 ## Developer Guide
@@ -93,7 +95,7 @@ registerMod(mod);
 
 ### Future plans
 #### v0.8.x
-Current version, migration to paper and API rewrite
+Dev version, migration to paper and API rewrite
 #### v0.9.x/v0.10.x
 Custom block support and world generation stuff
 #### v0.11.x and beyond
