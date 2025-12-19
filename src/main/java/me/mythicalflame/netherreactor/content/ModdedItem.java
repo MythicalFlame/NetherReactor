@@ -3,16 +3,12 @@ package me.mythicalflame.netherreactor.content;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
-import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import io.papermc.paper.datacomponent.item.Tool;
 import me.mythicalflame.netherreactor.NetherReactorModLoader;
 import me.mythicalflame.netherreactor.creative.CreativeTab;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -24,10 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
-
 //TODO: weapon (add getter/setter and attribute modifier), textures, enchants, armor
-//TODO: add other components, check MC wiki
+//TODO: explore compostor? and set default compost levels
+//TODO: recipes
 /**
  * This class represents a custom item.
  */
@@ -66,13 +61,11 @@ public abstract class ModdedItem
      */
     @Nonnull
     private Component itemName;
-
     /**
      * The lore of the item. For technical reasons, the line count cannot exceed 255.
      */
     @Nonnull
     private List<Component> lore = new ArrayList<>();
-    private int attackDamage = 1;
     /**
      * The rarity of the item.
      */
@@ -94,7 +87,7 @@ public abstract class ModdedItem
     @Nullable
     private Tool toolComponent;
     /**
-     * The chance for an item to successfully raise the level of a composter, from 0 to 100.
+     * The chance for an item to successfully raise the level of a composter, from 0 to 100. Note that this only works when you manually compost, and does not support hoppers currently.
      */
     @Nonnegative
     private int compostingChance = 0;
@@ -126,7 +119,6 @@ public abstract class ModdedItem
         this.maxStackSize = MATERIAL.getDefaultData(DataComponentTypes.MAX_STACK_SIZE);
         this.maxDamage = MATERIAL.getDefaultData(DataComponentTypes.MAX_DAMAGE) == null ? 0 : MATERIAL.getDefaultData(DataComponentTypes.MAX_DAMAGE);
         this.itemName = MATERIAL.getDefaultData(DataComponentTypes.ITEM_NAME);
-        //attack damage
         this.rarity = MATERIAL.getDefaultData(DataComponentTypes.RARITY);
         this.consumableComponent = MATERIAL.getDefaultData(DataComponentTypes.CONSUMABLE);
         this.foodComponent = MATERIAL.getDefaultData(DataComponentTypes.FOOD);
@@ -183,10 +175,7 @@ public abstract class ModdedItem
             stack.unsetData(DataComponentTypes.MAX_DAMAGE);
         }
         stack.setData(DataComponentTypes.ITEM_NAME, itemName);
-        stack.setData(DataComponentTypes.ITEM_MODEL, new NamespacedKey("e", "e"));
-        //ItemAttributeModifiers defaultAttributes = MATERIAL.getDefaultData(DataComponentTypes.ATTRIBUTE_MODIFIERS);
-        //ItemAttributeModifiers.itemAttributes().addModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier("", attackDamage, AttributeModifier.Operation.ADD_NUMBER), EquipmentSlotGroup.MAINHAND)
-        //stack.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, defaultAttributes);
+        //stack.setData(DataComponentTypes.ITEM_MODEL, new NamespacedKey("e", "e"));
         stack.setData(DataComponentTypes.RARITY, rarity);
         if (consumableComponent != null)
         {
@@ -203,8 +192,8 @@ public abstract class ModdedItem
 
         //PDC and item lore
         List<Component> moddedItemLore = new ArrayList<>();
-        Component firstLine = minimessage(NAMESPACE + ":" + ID);
-        moddedItemLore.add(firstLine);
+        //Component firstLine = minimessage(NAMESPACE + ":" + ID);
+        //moddedItemLore.add(firstLine); TODO make this just say mod name instead? + technical details inspect command
         moddedItemLore.addAll(lore);
         stack.setData(DataComponentTypes.LORE, ItemLore.lore(moddedItemLore));
 
@@ -368,7 +357,7 @@ public abstract class ModdedItem
         }
         this.lore = lore;
     }
-//DAMAGE GETTING/SETTING
+
     /**
      * Gets the rarity of the item.
      *
@@ -454,7 +443,7 @@ public abstract class ModdedItem
     }
 
     /**
-     * Gets the composting chance of the item.
+     * Gets the composting chance of the item. Note that this only works when you manually compost, and does not support hoppers currently.
      *
      * @return The chance of this item raising the level of a composter, from 0 to 100.
      */
@@ -465,7 +454,7 @@ public abstract class ModdedItem
     }
 
     /**
-     * Sets the composting chance of the item.
+     * Sets the composting chance of the item. Note that this only works when you manually compost, and does not support hoppers currently.
      *
      * @param compostingChance The chance of this item raising the level of a composter, from 0 to 100.
      *

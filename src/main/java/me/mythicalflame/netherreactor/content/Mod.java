@@ -12,7 +12,7 @@ import java.util.ArrayList;
  */
 public final class Mod
 {
-    //TODO: add field that points to localization file
+    //TODO assets registry
     /**
      * The namespace that the mod belongs to. This should be unique such that no other mod tries to use this namespace.
      */

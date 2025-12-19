@@ -9,6 +9,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
 import static org.bukkit.event.EventPriority.HIGHEST;
 
@@ -17,6 +19,11 @@ public final class CompostingWatcher implements Listener
     @EventHandler(priority = HIGHEST, ignoreCancelled = true)
     public void onCompost(PlayerInteractEvent event)
     {
+        if (event.getHand() != EquipmentSlot.HAND)
+        {
+            return;
+        }
+
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK)
         {
             Block block = event.getClickedBlock();
@@ -25,6 +32,11 @@ public final class CompostingWatcher implements Listener
                 ModdedItem moddedItem = NetherReactorAPI.getModdedItem(event.getItem());
                 if (moddedItem != null)
                 {
+                    event.setCancelled(true);
+                    ItemStack oldStack = event.getPlayer().getInventory().getItemInMainHand();
+                    oldStack.setAmount(oldStack.getAmount() - 1);
+                    event.getPlayer().getInventory().setItemInMainHand(oldStack);
+
                     int chance = moddedItem.getCompostingChance();
                     int rng = (int) (Math.random() * 100);
                     if (rng < chance)
