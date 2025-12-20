@@ -37,7 +37,7 @@ public final class ItemsCommand
             {
                 hasItems = true;
                 ModdedItem item = mod.getRegisteredItems().get(j);
-                result.append(minimessage(item.getNamespace() + ":" + item.getID()));
+                result.append(minimessage(item.getKey().namespace() + ":" + item.getKey().value()));
 
                 if (i < NetherReactorModLoader.getRegisteredMods().size() - 1 || j < mod.getRegisteredItems().size() - 1)
                 {

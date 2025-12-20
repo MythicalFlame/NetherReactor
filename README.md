@@ -1,13 +1,11 @@
 # NetherReactor Library
 Allows custom content like armors and items to be added to Minecraft servers in a server-sided way, so that clients don't need to add client side mods (only a resource pack).  
-Very experimental and new, lacking many features.  
-The current dev branch (0.8.0) is still missing some features/has regressions compared to v0.7.2, which will be fixed before the full launch.  
 
 ## Usage
 Add the release jar as a plugin on your server, and as a dependency for your new plugin (see below for more info).
 
 ### Version Guide
-Recently, the plugin has been re-written to only support Paper. Along with this, the modding system has been completely rewritten. Mods for v0.7.x and v0.8.x are not compatible in any way.  
+The plugin is being re-written to only support Paper. Along with this, the modding system is being completely rewritten. Mods for v0.7.x and v0.8.x are not compatible in any way.  
 If you are still using Spigot, or are using older Paper versions that don't support the component API, you can use the 0.7.x versions. Note that 0.7.x versions are not supported and will not receive bug fixes.  
 
 | Platform | Minecraft Version | NetherReactor Version |
@@ -17,86 +15,19 @@ If you are still using Spigot, or are using older Paper versions that don't supp
 | Paper    | 1.21.4+           | v0.8.0                |
 
 
-## Developer Guide
-I'm working on replacing this with a wiki. The guide below was written for v0.7.x.  
-[Javadoc (for an outdated version, sometime around v0.5.x)](https://mythicalflame.github.io)
+## Developer Information
+See the repository wiki for developer information. The wiki is maintained for the latest release version, and does not contain information about the beta releases or the dev branch.
 
-### Custom Items
-Currently, items can either be a regular item, a consumable, or a custom armor piece (custom armor covered in the next section).
+## Future plans
+### v0.8.x
+Completed: paper rework, item API rework, tags, partial composting component implementation   
 
-For a regular item, extend the `ModdedItem` class and create a default constructor with a namespace, item id, material, and display name:
-(Example for an item named TinSword)
-```java
-public ModdedItemTinSword()
-{
-  super("ultraswords", "tin_sword", Material.IRON_SWORD, "Tin Sword");
-}
-```
-Optionally, you can put an integer argument after the display name argument to add that number as custom model data for the item.
+Plans for betas:  
+Beta 2 - recipes with support for other custom item APIs, brigadier commands  
 
-If you wish to make your custom item a consumable, the code is similar, but you need to extend `ModdedConsumable` and override the `onConsume(PlayerItemConsumeEvent event)` method
+Beta 3 - automatic optional resource compilation for Bedrock/Java packs, enchantment support?  
 
-```java
-@Override
-public void onConsume(PlayerItemConsumeEvent event)
-{
-  Player player = event.getPlayer();
-  player.addPotionEffect(new PotionEffect(INCREASE_DAMAGE, 60, 0), true);
-}
-```
+Release - JEI integration with a separate mod, custom creative tab system for vanilla clients (like JEI), clean up code  
 
-Just as with regular items, custom consumables can also have a custom model data argument.
-
-Custom tools and weapons do not have a class, so custom durability and damage does not exist
-However, you can "create" damage by using events
-```java
-@Override
-public void onAttack(EntityDamageByEntityEvent event)
-{
-  event.setDamage(...);
-}
-```
-
-### Custom Armor
-Custom armor is a bit more complex to set up. To begin, create your armor piece item classes. These should inherit from `ModdedArmorPiece`. Next, for each armor piece, create an `ArmorChoice` object. The constructor takes in an array of `ModdedArmorPiece` objects. An empty array means that no armor pieces are accepted for that slot while a null array means that all wearables are accepted. Finally, create a subclass of `ModdedArmorSet` and pass in an `ArmorChoice` array beginning with the helmet object and ending with your boots object. If you wish, you can override the `public void onTick(Player player)` method to do things like give resistance to wearers of the set.  
-#### NOTE: if your armor set does not require some slots, put those slots as null in your `ModdedArmorPiece` array.
-
-### Registering your mod
-To register your custom items and armor sets, the `NetherReactor#registerMod` method can be used. This method takes a `Mod` object. Its constructor takes in a namespace, display name, and an API version. The Version class has two constructors: `int major, int minor, int patch, String releaseData` or `int major, int minor, int patch`, which uses "release" as the releaseData.  
-Registration example (with the steel armor set from above):
-
-```java
-
-import me.mythicalflame.netherreactor.content.Mod;
-import me.mythicalflame.netherreactor.utilities.Version;
-
-...
-
-Mod mod = new Mod("morearmors", "More Armors!", new Version(0, 7, 0));
-mod.
-
-registerItem(new ModdedItemSteelHelmet());
-        mod.
-
-registerItem(new ModdedItemSteelChestplate());
-        mod.
-
-registerItem(new ModdedItemSteelLeggings());
-        mod.
-
-registerItem(new ModdedItemSteelBoots());
-        mod.
-
-registerArmor(new ModdedArmorSetSteelSet());
-        NetherReactor.
-
-registerMod(mod);
-```
-
-### Future plans
-#### v0.8.x
-Dev version, migration to paper and API rewrite
-#### v0.9.x/v0.10.x
-Custom block support and world generation stuff
-#### v0.11.x and beyond
-Custom entities
+### Later
+Custom block + entity support

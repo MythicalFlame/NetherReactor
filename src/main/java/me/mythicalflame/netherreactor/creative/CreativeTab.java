@@ -1,5 +1,6 @@
 package me.mythicalflame.netherreactor.creative;
 
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.inventory.ItemStack;
 
@@ -12,15 +13,10 @@ import java.util.Arrays;
 public abstract class CreativeTab
 {
     /**
-     * The namespace of the creative tab. This must match your mod's namespace.
+     * The non-null key containing the namespace and ID of the creative tab. The namespace must match your mod's namespace.
      */
     @Nonnull
-    private final String NAMESPACE;
-    /**
-     * The ID of the creative tab.
-     */
-    @Nonnull
-    private final String ID;
+    private final Key KEY;
     /**
      * The priority of the creative tab. Lower priorities show up first in the creative inventory. Custom creative tabs should use positive priorities, to avoid messing with vanilla categories.
      */
@@ -39,41 +35,28 @@ public abstract class CreativeTab
     /**
      * Constructs a creative tab object.
      *
-     * @param namespace The namespace of this creative tab. This must match your mod's namespace.
-     * @param ID The ID of this creative tab.
+     * @param key The non-null key containing the namespace and ID of the creative tab. The namespace must match your mod's namespace.
      * @param priority The priority of this creative tab. This should be positive.
      * @param icon The icon of this creative tab.
      * @param name The component used as the name for this creative tab.
      */
-    public CreativeTab(@Nonnull String namespace, @Nonnull String ID, int priority, @Nonnull ItemStack icon, @Nonnull Component name)
+    public CreativeTab(@Nonnull Key key, int priority, @Nonnull ItemStack icon, @Nonnull Component name)
     {
-        this.NAMESPACE = namespace.toLowerCase();
-        this.ID = ID.toLowerCase();
+        this.KEY = key;
         this.PRIORITY = priority;
         this.ICON = icon;
         this.NAME = name;
     }
 
     /**
-     * Gets the namespace of the creative tab.
+     * Gets the namespace and ID of the creative tab as a NamespacedKey.
      *
-     * @return The namespace of this creative tab. Must match your mod's namespace.
+     * @return A Key with the namespace and ID of this creative tab.
      */
     @Nonnull
-    public String getNamespace()
+    public Key getKey()
     {
-        return NAMESPACE;
-    }
-
-    /**
-     * Gets the ID of the creative tab.
-     *
-     * @return The ID of this creative tab.
-     */
-    @Nonnull
-    public String getID()
-    {
-        return ID;
+        return KEY;
     }
 
     /**
@@ -122,7 +105,7 @@ public abstract class CreativeTab
             return false;
         }
 
-        return NAMESPACE.equals(otherTab.NAMESPACE) && ID.equals(otherTab.ID);
+        return KEY.equals(otherTab.KEY) && PRIORITY == otherTab.PRIORITY && ICON.equals(otherTab.ICON) && NAME.equals(otherTab.NAME);
     }
 
     /**
@@ -134,6 +117,6 @@ public abstract class CreativeTab
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(new Object[]{NAMESPACE, ID});
+        return Arrays.hashCode(new Object[]{KEY, PRIORITY, ICON, NAME});
     }
 }

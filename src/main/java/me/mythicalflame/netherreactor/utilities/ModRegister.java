@@ -3,15 +3,18 @@ package me.mythicalflame.netherreactor.utilities;
 import me.mythicalflame.netherreactor.NetherReactorModLoader;
 import me.mythicalflame.netherreactor.content.Mod;
 import me.mythicalflame.netherreactor.content.ModdedItem;
+import me.mythicalflame.netherreactor.content.ModdedTag;
 import me.mythicalflame.netherreactor.events.ModRegisterEvent;
 import me.mythicalflame.netherreactor.listeners.CompostingWatcher;
+import net.kyori.adventure.key.Key;
 
 import java.util.HashMap;
 
 public final class ModRegister
 {
     private static final HashMap<String, Mod> modCache = new HashMap<>();
-    private static final HashMap<String, ModdedItem> itemCache = new HashMap<>();
+    private static final HashMap<Key, ModdedItem> itemCache = new HashMap<>();
+    private static final HashMap<Key, ModdedTag> tagCache = new HashMap<>();
     /*
         Smart listener system that only registers listeners when needed
         Index - Listener
@@ -29,19 +32,24 @@ public final class ModRegister
 
     public static Mod getCachedMod(String namespace)
     {
-        return modCache.get(namespace.toLowerCase());
+        return modCache.get(namespace);
     }
 
-    public static ModdedItem getCachedItem(String technicalName)
+    public static ModdedItem getCachedItem(Key key)
     {
-        return itemCache.get(technicalName.toLowerCase());
+        return itemCache.get(key);
+    }
+
+    public static ModdedTag getCachedTag(Key key)
+    {
+        return tagCache.get(key);
     }
 
     private static void registerItems(Mod mod, NetherReactorModLoader plugin)
     {
         for (ModdedItem item : mod.getRegisteredItems())
         {
-            itemCache.put(item.getNamespace() + ":" + item.getID(), item);
+            itemCache.put(item.getKey(), item);
 
             if (!registered[0] && item.getCompostingChance() > 0)
             {
@@ -50,4 +58,14 @@ public final class ModRegister
             }
         }
     }
+
+    private static void registerTags(Mod mod)
+    {
+        for (ModdedTag tag : mod.getRegisteredTags())
+        {
+            tagCache.put(tag.getKey(), tag);
+        }
+    }
+
+    //TODO creative tabs
 }

@@ -15,18 +15,18 @@ import java.util.logging.Logger;
 
 public final class NetherReactorModLoader extends JavaPlugin
 {
-    private static final Version[] compatibleVersions = {new Version(0, 8, 0, "beta")};
+    private static final Version[] compatibleVersions = {new Version(0, 8, 0, "beta1")};
     private static NetherReactorModLoader plugin;
     private static Logger logger;
     private static final ArrayList<Mod> registeredMods = new ArrayList<>();
-    private static NamespacedKey contentKey;
+    private static NamespacedKey itemKey;
 
     @Override
     public void onEnable()
     {
         plugin = this;
         logger = getLogger();
-        contentKey = new NamespacedKey(this, "content");
+        itemKey = new NamespacedKey("netherreactor", "item_key");
 
         getConfig().options().copyDefaults();
         saveDefaultConfig();
@@ -49,13 +49,13 @@ public final class NetherReactorModLoader extends JavaPlugin
     }
 
     /**
-     * Gets the content key of the mod loader.
+     * Gets the item key namespaced key of the mod loader.
      *
-     * @return The NamespacedKey that this plugin uses to mark whether an object is custom.
+     * @return The NamespacedKey that this plugin uses to mark whether an item is custom and store its namespace and ID.
      */
-    public static NamespacedKey getContentKey()
+    public static NamespacedKey getItemKey()
     {
-        return contentKey;
+        return itemKey;
     }
 
     /**

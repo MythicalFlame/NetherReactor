@@ -2,6 +2,8 @@ package me.mythicalflame.netherreactor.commands;
 
 import me.mythicalflame.netherreactor.content.ModdedItem;
 import me.mythicalflame.netherreactor.utilities.ModRegister;
+import net.kyori.adventure.key.InvalidKeyException;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -35,7 +37,23 @@ public final class GiveCommand
             return;
         }
 
-        ModdedItem itemFound = ModRegister.getCachedItem(args[2]);
+        String[] input = args[2].split(":");
+        if (input.length != 2)
+        {
+            sender.sendMessage(minimessage("<red>/netherreactor give <playerName> <itemNamespace:itemID> [amount]</red>"));
+            return;
+        }
+
+        ModdedItem itemFound;
+        try
+        {
+            itemFound = ModRegister.getCachedItem(Key.key(input[0].toLowerCase(), input[1].toLowerCase()));
+        }
+        catch (InvalidKeyException ignored)
+        {
+            sender.sendMessage(minimessage("<red>/netherreactor give <playerName> <itemNamespace:itemID> [amount]</red>"));
+            return;
+        }
 
         if (itemFound == null)
         {

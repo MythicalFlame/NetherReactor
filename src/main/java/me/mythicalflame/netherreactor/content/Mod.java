@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 /**
- * Represents a game modification.
+ * This class represents a game modification.
  */
 public final class Mod
 {
@@ -38,6 +38,11 @@ public final class Mod
      */
     @Nonnull
     private final ArrayList<ModdedItem> registeredItems = new ArrayList<>();
+    /**
+     * The custom tags that the mod uses.
+     */
+    @Nonnull
+    private final ArrayList<ModdedTag> registeredTags = new ArrayList<>();
     /**
      * The creative tabs that the mod uses.
      */
@@ -122,6 +127,14 @@ public final class Mod
     public ArrayList<ModdedItem> getRegisteredItems() { return registeredItems; }
 
     /**
+     * Gets the tags registered with this mod.
+     *
+     * @return An ArrayList of the Tags registered in this mod.
+     */
+    @Nonnull
+    public ArrayList<ModdedTag> getRegisteredTags() { return registeredTags; }
+
+    /**
      * Gets the creative tabs registered with this mod.
      *
      * @return An ArrayList of the CreativeTabs registered in this mod.
@@ -159,11 +172,27 @@ public final class Mod
      */
     public void registerItem(@Nonnull ModdedItem item)
     {
-        if (!namespace.equals(item.getNamespace()))
+        if (!namespace.equals(item.getKey().namespace()))
         {
-            throw new IllegalArgumentException("Attempted to register an item to a mod, but the namespaces do not match (" + item.getNamespace() + " vs. " + namespace + ").");
+            throw new IllegalArgumentException("Attempted to register an item to a mod, but the namespaces do not match (" + item.getKey().namespace() + " vs. " + namespace + ").");
         }
         registeredItems.add(item);
+    }
+
+    /**
+     * Registers a custom tag with the mod.
+     *
+     * @param tag The custom tag to register.
+     *
+     * @throws IllegalArgumentException If the namespace of this mod and the tag do not match.
+     */
+    public void registerTag(@Nonnull ModdedTag tag)
+    {
+        if (!namespace.equals(tag.getKey().namespace()))
+        {
+            throw new IllegalArgumentException("Attempted to register a tag to a mod, but the namespaces do not match (" + tag.getKey().namespace() + " vs. " + namespace + ").");
+        }
+        registeredTags.add(tag);
     }
 
     /**
@@ -175,9 +204,9 @@ public final class Mod
      */
     public void registerCreativeTab(@Nonnull CreativeTab tab)
     {
-        if (!namespace.equals(tab.getNamespace()))
+        if (!namespace.equals(tab.getKey().namespace()))
         {
-            throw new IllegalArgumentException("Attempted to register a creative tab to a mod, but the namespaces do not match (" + tab.getNamespace() + " vs. " + namespace + ").");
+            throw new IllegalArgumentException("Attempted to register a creative tab to a mod, but the namespaces do not match (" + tab.getKey().namespace() + " vs. " + namespace + ").");
         }
 
         creativeTabs.add(tab);

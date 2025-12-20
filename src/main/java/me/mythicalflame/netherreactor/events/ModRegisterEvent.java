@@ -7,7 +7,7 @@ import org.bukkit.event.HandlerList;
 import javax.annotation.Nonnull;
 
 /**
- * An event called when a mod is registered. It is intended only for developers to listen to, and is not intended to be constructed by third parties.
+ * An event called when a mod is registered.
  */
 public final class ModRegisterEvent extends Event
 {

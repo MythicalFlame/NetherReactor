@@ -98,7 +98,7 @@ public final class CompileBedrockPack
             int itemCount = mod.getRegisteredItems().size();
             for (int j = 0; j < itemCount; ++j)
             {
-                String ID = mod.getRegisteredItems().get(j).getID();
+                String ID = mod.getRegisteredItems().get(j).getKey().value();
                 fileContent.add("\t\t\"" + ID + "\": {\n\t\t\t\"textures\": [\n\t\t\t\t\"textures/items/" + ID + "\"\n\t\t\t]\n\t\t}" + ((i == modCount - 1 && j == itemCount - 1) ? "" : ","));
             }
         }

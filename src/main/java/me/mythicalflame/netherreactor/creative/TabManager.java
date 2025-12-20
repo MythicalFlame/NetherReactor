@@ -36,10 +36,10 @@ public final class TabManager implements Listener
                 return 1;
             }
 
-            int compare = a.getNamespace().compareTo(b.getNamespace());
+            int compare = a.getKey().namespace().compareTo(b.getKey().namespace());
             if (compare == 0)
             {
-                int compare2 = a.getID().compareTo(b.getID());
+                int compare2 = a.getKey().value().compareTo(b.getKey().value());
                 return Integer.compare(compare2, 0);
             }
             else if (compare < 0)

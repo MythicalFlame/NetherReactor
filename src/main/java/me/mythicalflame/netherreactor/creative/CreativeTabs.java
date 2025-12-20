@@ -1,5 +1,6 @@
 package me.mythicalflame.netherreactor.creative;
 
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -21,7 +22,7 @@ public final class CreativeTabs
     {
         public BuildingTab()
         {
-            super("minecraft", "building_blocks", -100, new ItemStack(Material.BRICK), Component.translatable("itemGroup.buildingBlocks"));
+            super(Key.key("minecraft", "building_blocks"), -100, ItemStack.of(Material.BRICK), Component.translatable("itemGroup.buildingBlocks"));
         }
     }
 
@@ -29,7 +30,7 @@ public final class CreativeTabs
     {
         public ColoredTab()
         {
-            super("minecraft", "colored_blocks", -99, new ItemStack(Material.CYAN_WOOL), Component.translatable("itemGroup.coloredBlocks"));
+            super(Key.key("minecraft", "colored_blocks"), -99, ItemStack.of(Material.CYAN_WOOL), Component.translatable("itemGroup.coloredBlocks"));
         }
     }
 
@@ -37,7 +38,7 @@ public final class CreativeTabs
     {
         public NaturalTab()
         {
-            super("minecraft", "natural_blocks", -98, new ItemStack(Material.GRASS_BLOCK), Component.translatable("itemGroup.natural"));
+            super(Key.key("minecraft", "natural_blocks"), -98, ItemStack.of(Material.GRASS_BLOCK), Component.translatable("itemGroup.natural"));
         }
     }
 
@@ -45,7 +46,7 @@ public final class CreativeTabs
     {
         public FunctionalTab()
         {
-            super("minecraft", "functional_blocks", -97, new ItemStack(Material.OAK_SIGN), Component.translatable("itemGroup.functional"));
+            super(Key.key("minecraft", "functional_blocks"), -97, ItemStack.of(Material.OAK_SIGN), Component.translatable("itemGroup.functional"));
         }
     }
 
@@ -53,7 +54,7 @@ public final class CreativeTabs
     {
         public RedstoneTab()
         {
-            super("minecraft", "redstone_blocks", -96, new ItemStack(Material.REDSTONE), Component.translatable("itemGroup.redstone"));
+            super(Key.key("minecraft", "redstone_blocks"), -96, ItemStack.of(Material.REDSTONE), Component.translatable("itemGroup.redstone"));
         }
     }
 
@@ -61,7 +62,7 @@ public final class CreativeTabs
     {
         public ToolsTab()
         {
-            super("minecraft", "tools_and_utilities", -95, new ItemStack(Material.DIAMOND_PICKAXE), Component.translatable("itemGroup.tools"));
+            super(Key.key("minecraft", "tools_and_utilities"), -95, ItemStack.of(Material.DIAMOND_PICKAXE), Component.translatable("itemGroup.tools"));
         }
     }
 
@@ -69,7 +70,7 @@ public final class CreativeTabs
     {
         public CombatTab()
         {
-            super("minecraft", "combat", -94, new ItemStack(Material.NETHERITE_SWORD), Component.translatable("itemGroup.combat"));
+            super(Key.key("minecraft", "combat"), -94, ItemStack.of(Material.NETHERITE_SWORD), Component.translatable("itemGroup.combat"));
         }
     }
 
@@ -77,7 +78,7 @@ public final class CreativeTabs
     {
         public FoodTab()
         {
-            super("minecraft", "foods_and_drinks", -93, new ItemStack(Material.GOLDEN_APPLE), Component.translatable("itemGroup.foodAndDrink"));
+            super(Key.key("minecraft", "foods_and_drinks"), -93, ItemStack.of(Material.GOLDEN_APPLE), Component.translatable("itemGroup.foodAndDrink"));
         }
     }
 
@@ -85,7 +86,7 @@ public final class CreativeTabs
     {
         public IngredientsTab()
         {
-            super("minecraft", "ingredients", -92, new ItemStack(Material.IRON_INGOT), Component.translatable("itemGroup.ingredients"));
+            super(Key.key("minecraft", "ingredients"), -92, ItemStack.of(Material.IRON_INGOT), Component.translatable("itemGroup.ingredients"));
         }
     }
 
@@ -93,7 +94,7 @@ public final class CreativeTabs
     {
         public SpawnEggsTab()
         {
-            super("minecraft", "spawn_eggs", -91, new ItemStack(Material.PIG_SPAWN_EGG), Component.translatable("itemGroup.spawnEggs"));
+            super(Key.key("minecraft", "spawn_eggs"), -91, ItemStack.of(Material.PIG_SPAWN_EGG), Component.translatable("itemGroup.spawnEggs"));
         }
     }
 }

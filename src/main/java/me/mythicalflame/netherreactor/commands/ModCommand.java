@@ -46,7 +46,7 @@ public final class ModCommand
             {
                 ModdedItem item = mod.getRegisteredItems().get(i);
 
-                result.append(minimessage(item.getNamespace() + ":" + item.getID()));
+                result.append(minimessage(item.getKey().namespace() + ":" + item.getKey().value()));
 
                 if (i < mod.getRegisteredItems().size() - 1)
                 {

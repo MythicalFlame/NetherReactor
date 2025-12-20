@@ -7,11 +7,13 @@ import io.papermc.paper.datacomponent.item.ItemLore;
 import io.papermc.paper.datacomponent.item.Tool;
 import me.mythicalflame.netherreactor.NetherReactorModLoader;
 import me.mythicalflame.netherreactor.creative.CreativeTab;
+import me.mythicalflame.netherreactor.listeners.CompostingWatcher;
+import me.mythicalflame.netherreactor.utilities.KeyPersistentDataType;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemRarity;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -20,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-//TODO: weapon (add getter/setter and attribute modifier), textures, enchants, armor
-//TODO: explore compostor? and set default compost levels
 //TODO: recipes
 /**
  * This class represents a custom item.
@@ -30,15 +30,10 @@ public abstract class ModdedItem
 {
     //Required properties
     /**
-     * The namespace of the item. The item's technical name is "namespace:id". This must match your mod's namespace.
+     * The non-null key containing the namespace and ID of the item. The namespace must match your mod's namespace.
      */
     @Nonnull
-    private final String NAMESPACE;
-    /**
-     * The ID of the item. The item's technical name is "namespace:id".
-     */
-    @Nonnull
-    private final String ID;
+    private final Key KEY;
     /**
      * The material that the item is based off of.
      */
@@ -61,6 +56,11 @@ public abstract class ModdedItem
      */
     @Nonnull
     private Component itemName;
+    /**
+     * The key pointing to the item model asset. May be null for no item model.
+     */
+    @Nullable
+    private Key itemModel;
     /**
      * The lore of the item. For technical reasons, the line count cannot exceed 255.
      */
@@ -87,10 +87,10 @@ public abstract class ModdedItem
     @Nullable
     private Tool toolComponent;
     /**
-     * The chance for an item to successfully raise the level of a composter, from 0 to 100. Note that this only works when you manually compost, and does not support hoppers currently.
+     * The chance for an item to successfully raise the level of a composter, from 0 to 100. Note that this only works when you manually compost, and does not support hoppers currently. Also, by default, NetherReactor tries to automatically get the composting chance from a list of vanilla items. This may not work for newer items if your plugin version is outdated.
      */
     @Nonnegative
-    private int compostingChance = 0;
+    private int compostingChance;
     /**
      * The creative tab that the item will show up under in the NetherReactor creative inventory. Null means no tab.
      */
@@ -100,21 +100,19 @@ public abstract class ModdedItem
     /**
      * Constructs a ModdedItem object.
      *
-     * @param namespace The non-null namespace that this item belongs to. This must match your mod's namespace.
-     * @param id The non-null ID of this item.
+     * @param key The non-null key containing the namespace and ID of the item. The namespace must match your mod's namespace.
      * @param material The non-null non-air Material that this item is based off of.
      *
      * @throws IllegalArgumentException If this constructor is called with an invalid material (AIR).
      */
-    public ModdedItem(@Nonnull String namespace, @Nonnull String id, @Nonnull Material material)
+    public ModdedItem(@Nonnull Key key, @Nonnull Material material)
     {
         if (material == Material.AIR)
         {
-            throw new IllegalArgumentException("Attempted to initialize a ModdedItem object with an invalid material (AIR)! (" + namespace + ":" + id + ")");
+            throw new IllegalArgumentException("Attempted to initialize a ModdedItem object with an invalid material (AIR)! (" + key.namespace() + ":" + key.value() + ")");
         }
 
-        this.NAMESPACE = namespace.toLowerCase();
-        this.ID = id.toLowerCase();
+        this.KEY = key;
         this.MATERIAL = material;
         this.maxStackSize = MATERIAL.getDefaultData(DataComponentTypes.MAX_STACK_SIZE);
         this.maxDamage = MATERIAL.getDefaultData(DataComponentTypes.MAX_DAMAGE) == null ? 0 : MATERIAL.getDefaultData(DataComponentTypes.MAX_DAMAGE);
@@ -123,24 +121,7 @@ public abstract class ModdedItem
         this.consumableComponent = MATERIAL.getDefaultData(DataComponentTypes.CONSUMABLE);
         this.foodComponent = MATERIAL.getDefaultData(DataComponentTypes.FOOD);
         this.toolComponent = MATERIAL.getDefaultData(DataComponentTypes.TOOL);
-/*
-        ItemStack constructorItemStack = new ItemStack(material);
-
-        ItemMeta moddedItemMeta = constructorItemStack.getItemMeta();
-
-        //PDC
-        moddedItemMeta.getPersistentDataContainer().set(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING, NAMESPACE + ":" + ID);
-
-        constructorItemStack.setItemMeta(moddedItemMeta);
-
-        ItemStack finalizedItem = finalizeItem(constructorItemStack);
-
-        if (constructorItemStack.getType() != MATERIAL)
-        {
-            throw new UnsupportedOperationException("Overrides of ModdedItem#finalizeItem must not change the material of the ItemStack!");
-        }
-
-        ITEM = finalizedItem;*/
+        this.compostingChance = CompostingWatcher.getCompostingChance(material);
     }
 
     /**
@@ -163,7 +144,7 @@ public abstract class ModdedItem
     @Nonnull
     public ItemStack getItemStack(int amount)
     {
-        ItemStack stack = new ItemStack(MATERIAL);
+        ItemStack stack = ItemStack.of(MATERIAL);
 
         stack.setData(DataComponentTypes.MAX_STACK_SIZE, maxStackSize);
         if (maxDamage > 0)
@@ -197,7 +178,7 @@ public abstract class ModdedItem
         moddedItemLore.addAll(lore);
         stack.setData(DataComponentTypes.LORE, ItemLore.lore(moddedItemLore));
 
-        stack.editPersistentDataContainer(pdc -> pdc.set(NetherReactorModLoader.getContentKey(), PersistentDataType.STRING, NAMESPACE + ":" + ID));
+        stack.editPersistentDataContainer(pdc -> pdc.set(NetherReactorModLoader.getItemKey(), KeyPersistentDataType.INSTANCE, KEY));
 
         stack.setAmount(amount);
 
@@ -211,33 +192,14 @@ public abstract class ModdedItem
      */
 
     /**
-     * Gets the namespace of the item.
+     * Gets the namespace and ID of the item as a NamespacedKey.
      *
-     * @return The non-null namespace that this item belongs to.
+     * @return A Key with the namespace and ID of this item.
      */
     @Nonnull
-    public final String getNamespace() { return NAMESPACE; }
-
-    /**
-     * Gets the ID of the item.
-     *
-     * @return The non-null ID of this item.
-     */
-    @Nonnull
-    public final String getID()
+    public final Key getKey()
     {
-        return ID;
-    }
-
-    /**
-     * Gets the technical name (namespace:id) of the item.
-     *
-     * @return The technical name of this item.
-     */
-    @Nonnull
-    public final String getTechnicalName()
-    {
-        return NAMESPACE + ":" + ID;
+        return KEY;
     }
 
     /**
@@ -273,7 +235,7 @@ public abstract class ModdedItem
     {
         if (maxStackSize == 0 || maxStackSize > 99)
         {
-            throw new IllegalArgumentException("Tried to set maxStackSize to an out of bounds value! (" + maxStackSize + ")! (" + NAMESPACE + ":" + ID + ")");
+            throw new IllegalArgumentException("Tried to set maxStackSize to an out of bounds value! (" + maxStackSize + ")! (" + KEY.namespace() + ":" + KEY.value() + ")");
         }
 
         this.maxStackSize = maxStackSize;
@@ -332,6 +294,27 @@ public abstract class ModdedItem
     }
 
     /**
+     * Gets the model key of the item.
+     *
+     * @return The key that points to the model asset of this item.
+     */
+    @Nullable
+    public Key getItemModel()
+    {
+        return itemModel;
+    }
+
+    /**
+     * Sets the model key of the item.
+     *
+     * @param key The new key that points to the model asset of this item.
+     */
+    protected void setItemModel(@Nullable Key key)
+    {
+        this.itemModel = key;
+    }
+
+    /**
      * Gets the lore of the item.
      *
      * @return The List of Components used as lore for this item.
@@ -353,7 +336,7 @@ public abstract class ModdedItem
     {
         if (lore.size() > 255)
         {
-            throw new IllegalArgumentException("Tried to set lore to an illegal value! (length of " + lore.size() + ")! (" + NAMESPACE + ":" + ID + ")");
+            throw new IllegalArgumentException("Tried to set lore to an illegal value! (length of " + lore.size() + ")! (" + KEY.namespace() + ":" + KEY.value() + ")");
         }
         this.lore = lore;
     }
@@ -464,7 +447,7 @@ public abstract class ModdedItem
     {
         if (compostingChance > 100)
         {
-            throw new IllegalArgumentException("Tried to set compostingChance to an out of bounds value (" + compostingChance + ")! (" + NAMESPACE + ":" + ID + ")");
+            throw new IllegalArgumentException("Tried to set compostingChance to an out of bounds value (" + compostingChance + ")! (" + KEY.namespace() + ":" + KEY.value() + ")");
         }
         this.compostingChance = compostingChance;
     }
@@ -504,7 +487,7 @@ public abstract class ModdedItem
             return false;
         }
 
-        return NAMESPACE.equals(otherItem.NAMESPACE) && ID.equals(otherItem.ID);
+        return KEY.equals(otherItem.KEY) && MATERIAL.equals(otherItem.MATERIAL);
     }
 
     /**
@@ -516,6 +499,6 @@ public abstract class ModdedItem
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(new Object[]{NAMESPACE, ID});
+        return Arrays.hashCode(new Object[]{KEY, MATERIAL});
     }
 }
