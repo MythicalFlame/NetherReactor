@@ -7,7 +7,7 @@ import javax.annotation.Nonnull;
 import java.util.HashSet;
 
 /**
- * A tag type with built in sets that allow other plugins to add to your tag.
+ * A tag implementation with built-in sets that allow other plugins to add to your tag.
  */
 public abstract class ExpandableTag extends ModdedTag
 {
