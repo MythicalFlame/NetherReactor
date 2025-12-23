@@ -4,6 +4,7 @@ import net.kyori.adventure.key.Key;
 import org.bukkit.Material;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashSet;
 
 /**
@@ -43,7 +44,7 @@ public abstract class ExpandableTag extends ModdedTag
      * @param material The material to check for membership.
      * @return Whether or not the material is a member of this tag.
      */
-    public boolean isMember(Material material)
+    public boolean isMember(@Nullable Material material)
     {
         return MATERIAL_SET.contains(material);
     }
@@ -54,9 +55,14 @@ public abstract class ExpandableTag extends ModdedTag
      * @param item The item to check for membership.
      * @return Whether or not the item is a member of this tag.
      */
-    public boolean isMember(ModdedItem item)
+    public boolean isMember(@Nullable ModdedItem item)
     {
-        return MODDED_ITEM_SET.contains(item);
+        if (item == null)
+        {
+            return false;
+        }
+
+        return MODDED_ITEM_SET.contains(item) || isMember(item.getMaterial());
     }
 
     /**
@@ -65,9 +71,9 @@ public abstract class ExpandableTag extends ModdedTag
      * @param key The key to check for membership.
      * @return Whether or not the key is a member of this tag.
      */
-    public boolean isMember(Key key)
+    public boolean isMember(@Nullable Key key)
     {
-        return KEY_SET.contains(key);
+        return KEY_SET.contains(key) || super.isMember(key);
     }
 
     /**

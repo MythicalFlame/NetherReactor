@@ -1,9 +1,13 @@
 package me.mythicalflame.netherreactor.content;
 
+import me.mythicalflame.netherreactor.utilities.ModRegister;
+import me.mythicalflame.netherreactor.utilities.NetherReactorAPI;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 
 /**
@@ -28,13 +32,13 @@ public abstract class ModdedTag
     }
 
     /**
-     * A method intended to be overriden that determines whether a material is a member of the tag.
+     * A method intended to be overriden that determines whether a Material is a member of the tag.
      * Intended for checking whether or not vanilla items are in the tag.
      *
-     * @param material The material to check for membership.
-     * @return Whether or not the material is a member of this tag.
+     * @param material The Material to check for membership.
+     * @return Whether or not the Material is a member of this tag.
      */
-    public boolean isMember(Material material)
+    public boolean isMember(@Nullable Material material)
     {
         return false;
     }
@@ -46,21 +50,62 @@ public abstract class ModdedTag
      * @param item The item to check for membership.
      * @return Whether or not the item is a member of this tag.
      */
-    public boolean isMember(ModdedItem item)
+    public boolean isMember(@Nullable ModdedItem item)
     {
+        if (item == null)
+        {
+            return false;
+        }
+
+        return isMember(item.getMaterial());
+    }
+
+    /**
+     * A method intended to be overriden that determines whether a Key is a member of the tag.
+     * Intended for checking whether or not other custom items (Nexo, ItemsAdder, etc.) are in the tag.
+     *
+     * @param key The Key to check for membership.
+     * @return Whether or not the Key is a member of this tag.
+     */
+    public boolean isMember(@Nullable Key key)
+    {
+        if (key == null)
+        {
+            return false;
+        }
+
+        ModdedItem item = ModRegister.getCachedItem(key);
+        if (item != null)
+        {
+            return isMember(key);
+        }
+
         return false;
     }
 
     /**
-     * A method intended to be overriden that determines whether a key is a member of the tag.
-     * Intended for checking whether or not other custom items (Nexo, ItemsAdder, etc.) are in the tag.
+     * A method intended to be overriden that determines whether an ItemStack is a member of the tag.
+     * Intended for checking whether or not an item has specific characteristics (e.g. enchantments).
      *
-     * @param key The key to check for membership.
-     * @return Whether or not the key is a member of this tag.
+     * @param stack The ItemStack to check for membership.
+     * @return Whether or not the ItemStack is a member of this tag.
      */
-    public boolean isMember(Key key)
+    public boolean isMember(@Nullable ItemStack stack)
     {
-        return false;
+        if (stack == null)
+        {
+            return false;
+        }
+
+        ModdedItem moddedItem = NetherReactorAPI.getModdedItem(stack);
+        if (moddedItem != null)
+        {
+            return isMember(moddedItem);
+        }
+        else
+        {
+            return isMember(stack.getType());
+        }
     }
 
     /**
@@ -72,6 +117,17 @@ public abstract class ModdedTag
     public Key getKey()
     {
         return KEY;
+    }
+
+    /**
+     * Returns the String representation of the tag in the format "#namespace:id".
+     *
+     * @return The String representation of this tag.
+     */
+    @Override
+    public String toString()
+    {
+        return KEY.namespace() + ":" + KEY.value();
     }
 
     /**

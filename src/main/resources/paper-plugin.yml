@@ -1,0 +1,53 @@
+name: NetherReactor
+version: '${project.version}'
+main: me.mythicalflame.netherreactor.NetherReactorModLoader
+description: Modding framework for custom content
+authors: [ MythicalFlame ]
+website: https://mythicalflame.github.io/projects/netherreactor/index.html
+api-version: '1.21.4'
+load: STARTUP
+bootstrapper: me.mythicalflame.netherreactor.NetherReactorBootstrap
+permissions:
+  netherreactor.command.about:
+    description: Allows the user to use the NetherReactor about subcommand to see info about the plugin.
+    default: true
+  netherreactor.command.give:
+    description: Allows the user to use the NetherReactor give subcommand to give custom content to themselves and others.
+    default: op
+  netherreactor.command.item:
+    description: Allows the user to use the NetherReactor item subcommand to do things with items.
+    default: op
+    children:
+      netherreactor.command.item.inspect:
+        description: Allows the user to use the NetherReactor item inspect subcommand to inspect an item.
+        default: op
+  netherreactor.command.tag:
+    description: Allows the user to use the NetherReactor tag subcommand to do things with tags.
+    default: op
+    children:
+      netherreactor.command.tag.inspect:
+        description: Allows the user to use the NetherReactor tag inspect subcommand to see all tags a value matches.
+        default: op
+      netherreactor.command.tag.matches:
+        description: Allows the user to use the NetherReactor tag matches subcommand to check if an itemstack matches a tag.
+        default: op
+  netherreactor.command.mod:
+    description: Allows the user to use the NetherReactor mod subcommand to see info about mod(s).
+    default: true
+    children:
+      netherreactor.command.mod.list:
+        description: Allows the user to use the NetherReactor mod list subcommand to see the list of all mods.
+        default: true
+      netherreactor.command.mod.info:
+        description: Allows the user to use the NetherReactor mod info subcommand to see info for a specific mod.
+        default: true
+        children:
+          netherreactor.command.mod.info.items:
+            description: Allows the user to use the NetherReactor mod info subcommand to see item info for a specific mod.
+            default: true
+          netherreactor.command.mod.info.creativetabs:
+            description: Allows the user to use the NetherReactor mod info subcommand to see creative tab info for a specific mod.
+            default: true
+          netherreactor.command.mod.info.tags:
+            description: Allows the user to use the NetherReactor mod info subcommand to see tag info for a specific mod.
+            default: true

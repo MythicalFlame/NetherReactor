@@ -212,4 +212,33 @@ public final class NetherReactorAPI
         }
         return results;
     }
+
+    /**
+     * Searches for a list of all ModdedTags that a ItemStack is a member of.
+     *
+     * @param stack The ItemStack to search with.
+     * @return The ModdedTags found
+     */
+    @Nonnull
+    public static List<ModdedTag> getApplicableTags(@Nullable ItemStack stack)
+    {
+        List<ModdedTag> results = new ArrayList<>();
+
+        if (stack == null)
+        {
+            return results;
+        }
+
+        for (Mod mod : NetherReactorModLoader.getRegisteredMods())
+        {
+            for (ModdedTag tag : mod.getRegisteredTags())
+            {
+                if (tag.isMember(stack))
+                {
+                    results.add(tag);
+                }
+            }
+        }
+        return results;
+    }
 }

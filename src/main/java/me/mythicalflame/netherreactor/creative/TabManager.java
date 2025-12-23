@@ -24,7 +24,7 @@ public final class TabManager implements Listener
     @EventHandler
     public void onRegister(ModRegisterEvent event)
     {
-        tabs.addAll(event.getMod().getCreativeTabs());
+        tabs.addAll(event.getMod().getRegisteredCreativeTabs());
         //Sort first by priority, then namespace, then ID.
         tabs.sort((a, b) -> {
             if (a.getPriority() < b.getPriority())

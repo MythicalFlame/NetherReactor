@@ -47,7 +47,7 @@ public final class Mod
      * The creative tabs that the mod uses.
      */
     @Nonnull
-    private final ArrayList<CreativeTab> creativeTabs = new ArrayList<>();
+    private final ArrayList<CreativeTab> registeredCreativeTabs = new ArrayList<>();
 
     /**
      * Constructs a mod without a specific mod version.
@@ -67,13 +67,18 @@ public final class Mod
     /**
      * Constructs a mod with a specific mod version.
      *
-     * @param namespace The namespace that this mod belongs to. This should be unique such that no other mod tries to use this namespace.
+     * @param namespace The namespace that this mod belongs to. This should be unique such that no other mod tries to use this namespace. You may only use lowercase characters, numbers, and _, ., and -.
      * @param displayName The display name of this mod.
      * @param APIVersion The API version that this mod is based off of.
      * @param modVersion The version of this mod. Optional field.
      */
     public Mod(@Nonnull String namespace, @Nonnull String displayName, @Nonnull Version APIVersion, @Nullable Version modVersion)
     {
+        if (!namespace.matches("[a-z0-9_.-]+"))
+        {
+            throw new IllegalArgumentException("Could not construct mod with illegal namespace " + namespace + "!");
+        }
+
         this.namespace = namespace.toLowerCase();
         this.displayName = displayName;
         this.APIVersion = APIVersion;
@@ -140,9 +145,9 @@ public final class Mod
      * @return An ArrayList of the CreativeTabs registered in this mod.
      */
     @Nonnull
-    public ArrayList<CreativeTab> getCreativeTabs()
+    public ArrayList<CreativeTab> getRegisteredCreativeTabs()
     {
-        return creativeTabs;
+        return registeredCreativeTabs;
     }
 
     /**
@@ -209,6 +214,6 @@ public final class Mod
             throw new IllegalArgumentException("Attempted to register a creative tab to a mod, but the namespaces do not match (" + tab.getKey().namespace() + " vs. " + namespace + ").");
         }
 
-        creativeTabs.add(tab);
+        registeredCreativeTabs.add(tab);
     }
 }

@@ -1,6 +1,5 @@
 package me.mythicalflame.netherreactor;
 
-import me.mythicalflame.netherreactor.commands.CommandNetherReactor;
 import me.mythicalflame.netherreactor.content.Mod;
 import me.mythicalflame.netherreactor.creative.TabManager;
 import me.mythicalflame.netherreactor.utilities.ModRegister;
@@ -15,7 +14,7 @@ import java.util.logging.Logger;
 
 public final class NetherReactorModLoader extends JavaPlugin
 {
-    private static final Version[] compatibleVersions = {new Version(0, 8, 0, "beta1")};
+    private static final Version[] compatibleVersions = {new Version(0, 8, 0, "beta2"), new Version(0, 8, 0, "beta1")};
     private static NetherReactorModLoader plugin;
     private static Logger logger;
     private static final ArrayList<Mod> registeredMods = new ArrayList<>();
@@ -30,8 +29,6 @@ public final class NetherReactorModLoader extends JavaPlugin
 
         getConfig().options().copyDefaults();
         saveDefaultConfig();
-
-        getCommand("netherreactor").setExecutor(new CommandNetherReactor());
 
         getServer().getPluginManager().registerEvents(new TabManager(), this);
 
