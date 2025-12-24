@@ -52,12 +52,17 @@ public final class Mod
     /**
      * Constructs a mod without a specific mod version.
      *
-     * @param namespace The namespace that this mod belongs to. This should be unique such that no other mod tries to use this namespace.
+     * @param namespace The namespace that this mod belongs to. This should be unique such that no other mod tries to use this namespace. You may only use lowercase characters, numbers, and _, ., and -.
      * @param displayName The display name of this mod.
      * @param APIVersion The API version that this mod is based off of.
      */
     public Mod(@Nonnull String namespace, @Nonnull String displayName, @Nonnull Version APIVersion)
     {
+        if (!namespace.matches("[a-z0-9_.-]+"))
+        {
+            throw new IllegalArgumentException("Could not construct mod with illegal namespace " + namespace + "!");
+        }
+
         this.namespace = namespace.toLowerCase();
         this.displayName = displayName;
         this.APIVersion = APIVersion;

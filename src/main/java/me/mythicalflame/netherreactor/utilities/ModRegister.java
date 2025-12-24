@@ -9,6 +9,8 @@ import me.mythicalflame.netherreactor.listeners.CompostingWatcher;
 import net.kyori.adventure.key.Key;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public final class ModRegister
 {
@@ -43,6 +45,21 @@ public final class ModRegister
     public static ModdedTag getCachedTag(Key key)
     {
         return tagCache.get(key);
+    }
+
+    public static Stream<Map.Entry<String, Mod>> modCacheStream()
+    {
+        return modCache.entrySet().stream();
+    }
+
+    public static Stream<Map.Entry<Key, ModdedItem>> itemCacheStream()
+    {
+        return itemCache.entrySet().stream();
+    }
+
+    public static Stream<Map.Entry<Key, ModdedTag>> tagCacheStream()
+    {
+        return tagCache.entrySet().stream();
     }
 
     private static void registerItems(Mod mod, NetherReactorModLoader plugin)

@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 public final class NetherReactorModLoader extends JavaPlugin
 {
-    private static final Version[] compatibleVersions = {new Version(0, 8, 0, "beta2"), new Version(0, 8, 0, "beta1")};
+    private static final Version[] compatibleVersions = {new Version(0, 8, 0, "beta2")};
     private static NetherReactorModLoader plugin;
     private static Logger logger;
     private static final ArrayList<Mod> registeredMods = new ArrayList<>();

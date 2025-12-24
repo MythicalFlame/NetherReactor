@@ -2,16 +2,24 @@ package me.mythicalflame.netherreactor.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import me.mythicalflame.netherreactor.NetherReactorModLoader;
+import me.mythicalflame.netherreactor.utilities.ModRegister;
 import net.kyori.adventure.text.TextComponent;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+
+import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 import static net.kyori.adventure.text.Component.text;
 
-public class NetherReactorCommand
+public final class NetherReactorCommand
 {
     public static LiteralCommandNode<CommandSourceStack> generateCommand() {
         return
@@ -50,5 +58,44 @@ public class NetherReactorCommand
         sender.sendMessage(result.build());
 
         return Command.SINGLE_SUCCESS;
+    }
+
+    static CompletableFuture<Suggestions> getModSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder)
+    {
+        if (!ctx.getSource().getSender().hasPermission("netherreactor.command.mod.list"))
+        {
+            return builder.buildFuture();
+        }
+
+        NetherReactorModLoader.getRegisteredMods().stream()
+                .filter(mod -> mod.getNamespace().startsWith(builder.getRemainingLowerCase()))
+                .forEach(mod -> builder.suggest(mod.getNamespace()));
+        return builder.buildFuture();
+    }
+
+    static CompletableFuture<Suggestions> getItemSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder)
+    {
+        if (!ctx.getSource().getSender().hasPermission("netherreactor.command.mod.info.items"))
+        {
+            return builder.buildFuture();
+        }
+
+        ModRegister.itemCacheStream()
+                .filter(entry -> entry.getKey().toString().startsWith(builder.getRemainingLowerCase()))
+                .forEach(entry -> builder.suggest(entry.getKey().toString()));
+        return builder.buildFuture();
+    }
+
+    static CompletableFuture<Suggestions> getTagSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder)
+    {
+        if (!ctx.getSource().getSender().hasPermission("netherreactor.command.mod.info.tags"))
+        {
+            return builder.buildFuture();
+        }
+
+        ModRegister.tagCacheStream()
+                .filter(entry -> entry.getKey().toString().startsWith(builder.getRemainingLowerCase()))
+                .forEach(entry -> builder.suggest(entry.getKey().toString()));
+        return builder.buildFuture();
     }
 }

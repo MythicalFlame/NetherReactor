@@ -4,8 +4,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import me.mythicalflame.netherreactor.NetherReactorModLoader;
@@ -16,8 +14,6 @@ import me.mythicalflame.netherreactor.creative.CreativeTab;
 import me.mythicalflame.netherreactor.utilities.ModRegister;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.command.CommandSender;
-
-import java.util.concurrent.CompletableFuture;
 
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 import static net.kyori.adventure.text.Component.text;
@@ -30,7 +26,7 @@ public final class ModSubCommand
                         .executes(ModSubCommand::helpMessage)
                         .then(Commands.literal("info")
                                 .then(Commands.argument("mod", StringArgumentType.word())
-                                        .suggests(ModSubCommand::getModSuggestions)
+                                        .suggests(NetherReactorCommand::getModSuggestions)
                                         .then(Commands.literal("items")
                                                 .executes(ModSubCommand::modInfoItemsExecute))
                                         .then(Commands.literal("tags")
@@ -219,18 +215,7 @@ public final class ModSubCommand
 
     private static int helpMessage(CommandContext<CommandSourceStack> ctx)
     {
-        ctx.getSource().getSender().sendMessage(minimessage("<red>1. /netherreactor info <mod> <items|tags|creativetabs> - Lists specific information about a mod.\n2. /netherreactor mod list - Lists all registered mods.</red>"));
+        ctx.getSource().getSender().sendMessage(minimessage("<red>1. /netherreactor mod info <mod> <items|tags|creativetabs> - Lists specific information about a mod.\n2. /netherreactor mod list - Lists all registered mods.</red>"));
         return Command.SINGLE_SUCCESS;
-    }
-
-    private static CompletableFuture<Suggestions> getModSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder)
-    {
-        if (!ctx.getSource().getSender().hasPermission("netherreactor.command.mod.list"))
-        {
-            return builder.buildFuture();
-        }
-
-        NetherReactorModLoader.getRegisteredMods().forEach(mod -> builder.suggest(mod.getNamespace()));
-        return builder.buildFuture();
     }
 }

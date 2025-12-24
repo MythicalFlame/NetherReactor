@@ -1,26 +1,21 @@
 package me.mythicalflame.netherreactor.commands;
 
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import me.mythicalflame.netherreactor.NetherReactorModLoader;
 import me.mythicalflame.netherreactor.content.ModdedItem;
 import me.mythicalflame.netherreactor.utilities.KeyPersistentDataType;
 import me.mythicalflame.netherreactor.utilities.ModRegister;
 import me.mythicalflame.netherreactor.utilities.NetherReactorAPI;
-import net.kyori.adventure.key.InvalidKeyException;
 import net.kyori.adventure.key.Key;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import java.util.concurrent.CompletableFuture;
 
 import static me.mythicalflame.netherreactor.utilities.Utilities.minimessage;
 
@@ -35,8 +30,8 @@ public class ItemSubCommand
                                         .executes(ItemSubCommand::itemInspectExecuteMainHand)
                                 )
                                 .then(Commands.literal("lookup")
-                                        .then(Commands.argument("key", StringArgumentType.word())
-                                                .suggests(ItemSubCommand::getItemSuggestions)
+                                        .then(Commands.argument("key", ArgumentTypes.key())
+                                                .suggests(NetherReactorCommand::getItemSuggestions)
                                                 .executes(ItemSubCommand::itemInspectExecuteArgument)
                                         )
                                 )
@@ -72,6 +67,7 @@ public class ItemSubCommand
         if (itemFound == null)
         {
             sender.sendMessage(minimessage("<yellow>The item in your main hand is not a NetherReactor custom item.</yellow>"));
+            return Command.SINGLE_SUCCESS;
         }
 
         return itemInspectExecute(ctx, itemFound);
@@ -87,27 +83,18 @@ public class ItemSubCommand
             return Command.SINGLE_SUCCESS;
         }
 
-        String input = ctx.getArgument("key", String.class);
-        String[] splitted = input.split(":");
-        if (splitted.length != 2)
+        Key input = ctx.getArgument("key", Key.class);
+        if (input.namespace().equals("minecraft"))
         {
-            return helpMessage(ctx);
+            helpMessage(ctx);
+            return Command.SINGLE_SUCCESS;
         }
 
-        Key key;
-        try
-        {
-            key = Key.key(splitted[0].toLowerCase(), splitted[1].toLowerCase());
-        }
-        catch (InvalidKeyException ignored)
-        {
-            return helpMessage(ctx);
-        }
-
-        ModdedItem itemFound = ModRegister.getCachedItem(key);
+        ModdedItem itemFound = ModRegister.getCachedItem(input);
         if (itemFound == null)
         {
             sender.sendMessage(minimessage("<red>Could not find item \"" + input + "\"!</red>"));
+            return Command.SINGLE_SUCCESS;
         }
 
         return itemInspectExecute(ctx, itemFound);
@@ -117,7 +104,7 @@ public class ItemSubCommand
     {
         CommandSender sender = ctx.getSource().getSender();
 
-        sender.sendMessage(minimessage("<gold>NetherReactor Item Inspection Results:</gold>\nMod: " + NetherReactorAPI.getMod(item).getDisplayName() + "\nName: " + item.getItemName() + "\nTechnical Name: " + item.getKey().toString() + "\nMaterial: " + item.getMaterial()));
+        sender.sendMessage(minimessage("<gold>NetherReactor Item Inspection Results:</gold>\nMod: " + NetherReactorAPI.getMod(item).getDisplayName() + "\nName: ").append(item.getItemName()).append(minimessage("\nTechnical Name: " + item.getKey().toString() + "\nMaterial: " + item.getMaterial())));
 
         return Command.SINGLE_SUCCESS;
     }
@@ -126,28 +113,5 @@ public class ItemSubCommand
     {
         ctx.getSource().getSender().sendMessage(minimessage("<red>1. /netherreactor item inspect mainhand - Shows details about the custom item in your main hand.\n2. /netherreactor item inspect lookup <itemNamespace:itemID> - Shows information about a specific item.</red>"));
         return Command.SINGLE_SUCCESS;
-    }
-
-    private static CompletableFuture<Suggestions> getModSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder)
-    {
-        if (!ctx.getSource().getSender().hasPermission("netherreactor.command.mod.list"))
-        {
-            return builder.buildFuture();
-        }
-
-        NetherReactorModLoader.getRegisteredMods().forEach(mod -> builder.suggest(mod.getNamespace()));
-        return builder.buildFuture();
-    }
-
-    private static CompletableFuture<Suggestions> getItemSuggestions(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder)
-    {
-        if (!ctx.getSource().getSender().hasPermission("netherreactor.command.mod.info.items"))
-        {
-            return builder.buildFuture();
-        }
-
-        NetherReactorModLoader.getRegisteredMods().forEach(
-                mod -> mod.getRegisteredItems().forEach(item -> builder.suggest(item.getKey().toString())));
-        return builder.buildFuture();
     }
 }
