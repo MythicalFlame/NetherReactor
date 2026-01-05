@@ -1,0 +1,3 @@
+modules:
+  vanilla_support:
+    enabled: true

@@ -8,6 +8,6 @@ public final class NetherReactorPlugin extends JavaPlugin
     @Override
     public void onEnable()
     {
-        //new ItemRegistryMutator_v1_21_8().freezeItemRegistry();
+        new ItemRegistryMutator_v1_21_8().freezeItemRegistry();
     }
 }

@@ -6,23 +6,12 @@ import net.kyori.adventure.key.Key;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistrationInfo;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.DependantName;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.Rarity;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.component.ItemLore;
-import net.minecraft.world.item.component.TooltipDisplay;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
 
@@ -34,10 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Set;
-
-import sun.misc.Unsafe;
-
-import static net.minecraft.core.component.DataComponents.*;
 
 //Inspired by ItemsAdderBlockInjector
 public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
@@ -127,42 +112,6 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             System.out.println("[NetherReactor] Registered item " + moddedItemKey + " successfully!");
         });
     }
-    /*
-
-    //For some reason, DataComponents.COMMON_ITEM_COMPONENTS is not immediately instantiated, so we cannot create an Item.Properties object normally
-    //https://stackoverflow.com/a/25448017
-    public Item.Properties getProperties(ModdedItem moddedItem) throws NoSuchFieldException, IllegalAccessException, InstantiationException
-    {
-        Key moddedItemKey = moddedItem.getItemProperties().getKey();
-        ResourceKey<Item> resourceKey = ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(moddedItemKey.namespace(), moddedItemKey.value()));
-
-        Field singleoneInstanceField = Unsafe.class.getDeclaredField("theUnsafe");
-        singleoneInstanceField.setAccessible(true);
-        Unsafe unsafe = (Unsafe) singleoneInstanceField.get(null);
-        Item.Properties properties = (Item.Properties) unsafe.allocateInstance(Item.Properties.class);
-
-        Field componentsPropertiesField = Item.Properties.class.getDeclaredField("components");
-        componentsPropertiesField.setAccessible(true);
-        componentsPropertiesField.set(properties, DataComponentMap.builder()/*.addAll(DataComponentMap.builder().set(MAX_STACK_SIZE, 64).set(LORE, ItemLore.EMPTY).set(ENCHANTMENTS, ItemEnchantments.EMPTY).set(REPAIR_COST, 0).set(ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).set(RARITY, Rarity.COMMON).set(BREAK_SOUND, SoundEvents.ITEM_BREAK).set(TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT)*//*);
-        Field requiredFeaturesPropertiesField = Item.Properties.class.getDeclaredField("requiredFeatures");
-        requiredFeaturesPropertiesField.setAccessible(true);
-        requiredFeaturesPropertiesField.set(properties, FeatureFlags.VANILLA_SET);
-
-        Field itemDescriptionIdPropertiesField = Item.Properties.class.getDeclaredField("ITEM_DESCRIPTION_ID");
-        itemDescriptionIdPropertiesField.setAccessible(true);
-
-        Field descriptionIdPropertiesField = Item.Properties.class.getDeclaredField("descriptionId");
-        descriptionIdPropertiesField.setAccessible(true);
-        descriptionIdPropertiesField.set(properties, itemDescriptionIdPropertiesField.get(null));
-
-        Items;
-        Field modelPropertiesField = Item.Properties.class.getDeclaredField("model");
-        modelPropertiesField.setAccessible(true);
-        modelPropertiesField.set(properties, (DependantName<Item, ResourceLocation>) ResourceKey::location);
-
-        new Item.Properties().setId(resourceKey);
-        return null;
-    }*/
 
     private Method getUnboundMethod() throws NoSuchMethodException
     {
