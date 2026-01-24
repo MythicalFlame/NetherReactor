@@ -1,7 +1,7 @@
 package me.mythicalflame.netherreactor.internals.v1_21_8;
 
-import me.mythicalflame.netherreactor.api.ModdedItem;
-import me.mythicalflame.netherreactor.core.AbstractItemRegistryMutator;
+import me.mythicalflame.netherreactor.api.content.Mod;
+import me.mythicalflame.netherreactor.core.registries.AbstractItemRegistryMutator;
 import net.kyori.adventure.key.Key;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
@@ -27,23 +27,29 @@ import java.util.Set;
 //Inspired by ItemsAdderBlockInjector
 public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 {
+    private MappedRegistry<Item> ITEMS;
     @Override
-    public void registerItems(Collection<ModdedItem> items)
+    public void unfreezeRegistry() throws NoSuchFieldException, IllegalAccessException
     {
-        MappedRegistry<Item> ITEMS;
+        ITEMS = (MappedRegistry<Item>) BuiltInRegistries.ITEM;
+
+        Field frozenField = MappedRegistry.class.getDeclaredField("frozen");
+        frozenField.setAccessible(true);
+        frozenField.set(ITEMS, false);
+
+        Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
+        allTagsField.setAccessible(true);
+
+        Field frozenTagsField = MappedRegistry.class.getDeclaredField("frozenTags");
+        frozenTagsField.setAccessible(true);
+    }
+
+    @Override
+    public void registerItems(Collection<Mod> mods)
+    {
         try
         {
-            ITEMS = (MappedRegistry<Item>) BuiltInRegistries.ITEM;
-
-            Field frozenField = MappedRegistry.class.getDeclaredField("frozen");
-            frozenField.setAccessible(true);
-            frozenField.set(ITEMS, false);
-
-            Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
-            allTagsField.setAccessible(true);
-
-            Field frozenTagsField = MappedRegistry.class.getDeclaredField("frozenTags");
-            frozenTagsField.setAccessible(true);
+            unfreezeRegistry();
         }
         catch (NoSuchFieldException | IllegalAccessException e)
         {
@@ -52,7 +58,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             return;
         }
 
-        items.forEach(moddedItem -> {
+        mods.forEach(mod -> mod.getRegisteredItems().forEach(moddedItem -> {
             Key moddedItemKey = moddedItem.getItemProperties().getKey();
             Item minecraftItem;
             try
@@ -107,10 +113,10 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 return;
             }
 
-            ITEMS.freeze();
-
             System.out.println("[NetherReactor] Registered item " + moddedItemKey + " successfully!");
-        });
+        }));
+
+        ITEMS.freeze();
     }
 
     private Method getUnboundMethod() throws NoSuchMethodException
@@ -125,22 +131,61 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 
         throw new IllegalArgumentException("Could not find method TagSet#unbound!");
     }
-
-    @Override
-    public void freezeItemRegistry()
+/*
+    private DataComponentType thing(io.papermc.paper.datacomponent.DataComponentType paperType)
     {
-        try
+        //custom data
+        if (paperType.equals(DataComponentTypes.MAX_STACK_SIZE))
         {
-            MappedRegistry<Item> ITEMS = (MappedRegistry<Item>) BuiltInRegistries.ITEM;
-
-            Field frozenField = MappedRegistry.class.getDeclaredField("frozen");
-            frozenField.setAccessible(true);
-            frozenField.set(ITEMS, true);
+            return DataComponents.MAX_STACK_SIZE;
         }
-        catch (NoSuchFieldException | IllegalAccessException e)
+        else if (paperType.equals(DataComponentTypes.MAX_DAMAGE))
         {
-            System.out.println("Could not freeze registry:");
-            e.printStackTrace();
+            return DataComponents.MAX_DAMAGE;
         }
-    }
+        else if (paperType.equals(DataComponentTypes.DAMAGE))
+        {
+            return DataComponents.DAMAGE;
+        }
+        else if (paperType.equals(DataComponentTypes.UNBREAKABLE))
+        {
+            return DataComponents.UNBREAKABLE;
+        }
+        else if (paperType.equals(DataComponentTypes.CUSTOM_NAME))
+        {
+            return DataComponents.CUSTOM_NAME;
+        }
+        else if (paperType.equals(DataComponentTypes.ITEM_NAME))
+        {
+            return DataComponents.ITEM_NAME;
+        }
+        else if (paperType.equals(DataComponentTypes.ITEM_MODEL))
+        {
+            return DataComponents.ITEM_MODEL;
+        }
+        else if (paperType.equals(DataComponentTypes.LORE))
+        {
+            return DataComponents.LORE;
+        }
+        else if (paperType.equals(DataComponentTypes.RARITY))
+        {
+            return DataComponents.RARITY;
+        }
+        else if (paperType.equals(DataComponentTypes.ENCHANTMENTS))
+        {
+            return DataComponents.ENCHANTMENTS;
+        }
+        else if (paperType.equals(DataComponentTypes.CAN_PLACE_ON))
+        {
+            return DataComponents.CAN_PLACE_ON;
+        }
+        else if (paperType.equals(DataComponentTypes.CAN_BREAK))
+        {
+            return DataComponents.CAN_BREAK;
+        }
+        else if (paperType.equals(DataComponentTypes.ATTRIBUTE_MODIFIERS))
+        {
+            return DataComponents.ATTRIBUTE_MODIFIERS;
+        }
+    }*/
 }

@@ -1,4 +1,4 @@
-package me.mythicalflame.netherreactor.api;
+package me.mythicalflame.netherreactor.api.content;
 
 public class ModdedItem
 {

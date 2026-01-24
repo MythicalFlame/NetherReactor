@@ -6,3 +6,9 @@ load: STARTUP
 authors: [ MythicalFlame ]
 description: Server side modding framework for Paper and its derivatives. Not officially affiliated with PaperMC.
 bootstrapper: me.mythicalflame.netherreactor.core.NetherReactorBootstrapper
+dependencies:
+  server:
+    ProtocolLib:
+      load: BEFORE
+      required: false
+      join-classpath: true

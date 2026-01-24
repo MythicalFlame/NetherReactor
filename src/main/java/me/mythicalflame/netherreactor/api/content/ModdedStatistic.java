@@ -1,12 +1,12 @@
-package me.mythicalflame.netherreactor.api;
+package me.mythicalflame.netherreactor.api.content;
 
 import net.kyori.adventure.key.Key;
 
-public class ItemProperties
+public class ModdedStatistic
 {
     private final Key KEY;
 
-    public ItemProperties(Key key)
+    public ModdedStatistic(Key key)
     {
         this.KEY = key;
     }
