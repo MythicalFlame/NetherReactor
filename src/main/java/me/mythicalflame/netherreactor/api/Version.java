@@ -1,127 +1,41 @@
 package me.mythicalflame.netherreactor.api;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 /**
  * This class represents a NetherReactor API version.
+ *
+ * @param major The major version number.
+ * @param minor The minor version number.
+ * @param patch The patch version number.
  */
-public final class Version
+public record Version(int major, int minor, int patch)
 {
     /**
-     * The major version number.
-     */
-    private final int major;
-    /**
-     * The minor version number.
-     */
-    private final int minor;
-    /**
-     * The patch version number.
-     */
-    private final int patch;
-    /**
-     * The release metadata.
-     */
-    @Nonnull
-    private final String releaseData;
-
-    /**
-     * Constructs a Version object with the release metadata "release".
+     * Gets the version's representation as a string.
      *
-     * @param major The major version number.
-     * @param minor The minor version number.
-     * @param patch The patch version number.
-     */
-    public Version(int major, int minor, int patch)
-    {
-        this.major = major;
-        this.minor = minor;
-        this.patch = patch;
-        this.releaseData = "release";
-    }
-
-    /**
-     * Constructs a Version object with a custom release metadata.
-     *
-     * @param major The major version number.
-     * @param minor The minor version number.
-     * @param patch The patch version number.
-     * @param releaseData The release metadata.
-     */
-    public Version(int major, int minor, int patch, @Nonnull String releaseData)
-    {
-        this.major = major;
-        this.minor = minor;
-        this.patch = patch;
-        this.releaseData = releaseData;
-    }
-
-    /**
-     * Gets the major number of the version.
-     *
-     * @return The major version number.
-     */
-    public int getMajor()
-    {
-        return major;
-    }
-
-    /**
-     * Gets the minor number of the version.
-     *
-     * @return The minor version number.
-     */
-    public int getMinor()
-    {
-        return minor;
-    }
-
-    /**
-     * Gets the patch number of the version.
-     *
-     * @return The patch version number.
-     */
-    public int getPatch()
-    {
-        return patch;
-    }
-
-    /**
-     * Gets the release metadata of the version.
-     *
-     * @return The release metadata.
-     */
-    public @Nonnull String getReleaseData()
-    {
-        return releaseData;
-    }
-
-    /**
-     * Overrides Object#toString.
-     *
-     * @return A string in the format of "vmajor.minor.patch-releaseData".
+     * @return A string in the format of "major.minor.patch".
      */
     @Override
     public String toString()
     {
-        return "v" + major + "." + minor + "." + patch + "-" + releaseData;
+        return major + "." + minor + "." + patch;
     }
 
     @Override
     public boolean equals(Object other)
     {
-        if (!(other instanceof Version otherVersion))
+        if (!(other instanceof Version(int majorOther, int minorOther, int patchOther)))
         {
             return false;
         }
 
-        return major == otherVersion.major && minor == otherVersion.minor && patch == otherVersion.patch && releaseData.equals(otherVersion.releaseData);
+        return major == majorOther && minor == minorOther && patch == patchOther;
     }
 
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(new Object[]{major, minor, patch, releaseData});
+        return Arrays.hashCode(new Object[]{major, minor, patch});
     }
 }

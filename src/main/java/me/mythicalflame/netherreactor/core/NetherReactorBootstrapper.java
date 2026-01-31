@@ -11,22 +11,47 @@ import java.util.List;
 
 public class NetherReactorBootstrapper implements PluginBootstrap
 {
-    public static final List<Mod> mods = new ArrayList<>();
+    public static final List<Mod> MODS = new ArrayList<>();
+    private static boolean doItemsExist = false;
+    private static boolean doEffectsExist = false;
+    private static boolean doStatisticsExist = false;
 
     @Override
     public void bootstrap(BootstrapContext context)
     {
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY.newHandler(
                 event -> {
-                    RegistryManager.getItemMutator().registerItems(mods);
-                    RegistryManager.getEffectMutator().registerEffects(mods);
-                    RegistryManager.getStatisticMutator().registerStatistics(mods);
+                    if (doItemsExist)
+                    {
+                        RegistryManager.getItemMutator().registerItems(MODS);
+                    }
+                    if (doEffectsExist)
+                    {
+                        RegistryManager.getEffectMutator().registerEffects(MODS);
+                    }
+                    if (doStatisticsExist)
+                    {
+                        RegistryManager.getStatisticMutator().registerStatistics(MODS);
+                    }
                 }
         ));
     }
 
     public static void registerMod(Mod mod)
     {
-        mods.add(mod);
+        MODS.add(mod);
+
+        if (!mod.getRegisteredItems().isEmpty())
+        {
+            doItemsExist = true;
+        }
+        if (!mod.getRegisteredEffects().isEmpty())
+        {
+            doEffectsExist = true;
+        }
+        if (!mod.getRegisteredStatistics().isEmpty())
+        {
+            doStatisticsExist = true;
+        }
     }
 }

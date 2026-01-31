@@ -23,26 +23,26 @@ public final class EffectPacketInterceptor extends PacketAdapter
         Player player = event.getPlayer();
         if (event.getPacketType() == PacketType.Play.Server.REMOVE_ENTITY_EFFECT)
         {
-            PacketContainer packet =  event.getPacket();
-            if (NetherReactorRegistry.Effects.get(packet.getEffectTypes().read(0).key()) == null)
+            if (EnderReactorModule.hasPlayer(player))
             {
                 return;
             }
 
-            if (!EnderReactorModule.hasPlayer(player))
+            PacketContainer packet = event.getPacket();
+            if (NetherReactorRegistry.Effects.get(packet.getEffectTypes().read(0).key()) != null)
             {
                 event.setCancelled(true);
             }
         }
         else if (event.getPacketType() == PacketType.Play.Server.ENTITY_EFFECT)
         {
-            PacketContainer packet =  event.getPacket();
-            if (NetherReactorRegistry.Effects.get(packet.getEffectTypes().read(0).key()) == null)
+            if (EnderReactorModule.hasPlayer(player))
             {
                 return;
             }
 
-            if (!EnderReactorModule.hasPlayer(player))
+            PacketContainer packet = event.getPacket();
+            if (NetherReactorRegistry.Effects.get(packet.getEffectTypes().read(0).key()) != null)
             {
                 event.setCancelled(true);
             }

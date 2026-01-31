@@ -10,13 +10,12 @@ import java.util.Set;
 public final class EnderReactorModule
 {
     private static final HashSet<Player> ENDER_REACTOR_PLAYERS = new HashSet<>();
-    public static final HashSet<Version> SUPPORTED_VERSIONS = new HashSet<>(Set.of(new Version(0, 1, 0, "dev")));
+    public static final HashSet<Version> SUPPORTED_VERSIONS = new HashSet<>(Set.of(new Version(0, 0, 1)));
     private EnderReactorModule() {}
 
     public static void activate(NetherReactorPlugin plugin)
     {
-        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "netherreactor");
-        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, "netherreactor", new PluginMessagingHandler(plugin));
+        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, "enderreactor:enderreactor_specification", new NetherReactorMessagingHandler());
         plugin.getServer().getPluginManager().registerEvents(new ModdedLeaveListener(), plugin);
     }
 

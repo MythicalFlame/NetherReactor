@@ -90,6 +90,7 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
                 unregisteredIntrusiveHolders.set(STATISTICS, null);
 
                 REGISTERED_MINECRAFT_STATS.put(moddedStatisticKey, minecraftLocation);
+                NetherReactorRegistry.Statistics.addName("minecraft.custom:" + moddedStatisticKey.namespace() + "." + moddedStatisticKey.value());
             }
             catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
             {

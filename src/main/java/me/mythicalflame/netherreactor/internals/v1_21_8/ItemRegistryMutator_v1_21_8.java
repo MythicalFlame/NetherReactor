@@ -50,15 +50,15 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
         try
         {
             unfreezeRegistry();
-        }
-        catch (NoSuchFieldException | IllegalAccessException e)
+        } catch (NoSuchFieldException | IllegalAccessException e)
         {
             System.out.println("[NetherReactor] Could not initialize item registry injector!");
             e.printStackTrace();
             return;
         }
 
-        mods.forEach(mod -> mod.getRegisteredItems().forEach(moddedItem -> {
+        mods.forEach(mod -> mod.getRegisteredItems().forEach(moddedItem ->
+        {
             Key moddedItemKey = moddedItem.getItemProperties().getKey();
             Item minecraftItem;
             try
@@ -90,8 +90,8 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 bindMethod.invoke(holder, tags);
 
                 unregisteredIntrusiveHolders.set(ITEMS, null);
-            }
-            catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
+            } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException |
+                     InvocationTargetException e)
             {
                 System.out.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Minecraft Item registry!");
                 e.printStackTrace();
@@ -105,8 +105,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 itemMaterialField.setAccessible(true);
                 HashMap<Item, Material> ITEM_MATERIAL = (HashMap<Item, Material>) itemMaterialField.get(null);
                 ITEM_MATERIAL.put(minecraftItem, Material.COBBLESTONE); //placeholder
-            }
-            catch (IllegalAccessException | NoSuchFieldException e)
+            } catch (IllegalAccessException | NoSuchFieldException e)
             {
                 System.out.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Bukkit Item->Material registry!");
                 e.printStackTrace();
