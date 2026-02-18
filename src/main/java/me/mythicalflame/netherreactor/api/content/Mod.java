@@ -18,6 +18,9 @@ public class Mod
      */
     private final String VERSION;
     private final ArrayList<ModdedItem> ITEMS = new ArrayList<>();
+    /**
+     * A list of ModdedEffects this mod will use.
+     */
     private final ArrayList<ModdedEffect> EFFECTS = new ArrayList<>();
     /**
      * A list of ModdedStatistics this mod will use.
@@ -46,6 +49,11 @@ public class Mod
         ITEMS.add(item);
     }
 
+    /**
+     * Adds a ModdedEffect to the mod.
+     *
+     * @param effect The effect to add.
+     */
     public void addEffect(ModdedEffect effect)
     {
         EFFECTS.add(effect);
@@ -67,6 +75,11 @@ public class Mod
         return Collections.unmodifiableList(ITEMS);
     }
 
+    /**
+     * Gets a list of registered ModdedEffects.
+     *
+     * @return An immutable List of ModdedEffects.
+     */
     public List<ModdedEffect> getRegisteredEffects()
     {
         return Collections.unmodifiableList(EFFECTS);
@@ -76,7 +89,7 @@ public class Mod
      * Gets a list of registered ModdedStatistics.
      * <p><strong>WARNING: If you add a statistic to the server, players without the Java Edition client support mod will not be able to see their statistics (due to a ProtocolLib bug), and Bukkit will throw an error whenever a custom statistic is changed.</strong></p>
      *
-     * @return A List of ModdedStatistics.
+     * @return An immutable List of ModdedStatistics.
      */
     public List<ModdedStatistic> getRegisteredStatistics()
     {

@@ -52,7 +52,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             unfreezeRegistry();
         } catch (NoSuchFieldException | IllegalAccessException e)
         {
-            System.out.println("[NetherReactor] Could not initialize item registry injector!");
+            System.err.println("[NetherReactor] Could not initialize item registry injector!");
             e.printStackTrace();
             return;
         }
@@ -93,7 +93,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException |
                      InvocationTargetException e)
             {
-                System.out.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Minecraft Item registry!");
+                System.err.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Minecraft Item registry!");
                 e.printStackTrace();
                 return;
             }
@@ -107,7 +107,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 ITEM_MATERIAL.put(minecraftItem, Material.COBBLESTONE); //placeholder
             } catch (IllegalAccessException | NoSuchFieldException e)
             {
-                System.out.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Bukkit Item->Material registry!");
+                System.err.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Bukkit Item->Material registry!");
                 e.printStackTrace();
                 return;
             }

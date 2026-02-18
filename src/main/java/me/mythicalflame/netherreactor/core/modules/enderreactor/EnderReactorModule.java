@@ -11,6 +11,7 @@ public final class EnderReactorModule
 {
     private static final HashSet<Player> ENDER_REACTOR_PLAYERS = new HashSet<>();
     public static final HashSet<Version> SUPPORTED_VERSIONS = new HashSet<>(Set.of(new Version(0, 0, 1)));
+
     private EnderReactorModule() {}
 
     public static void activate(NetherReactorPlugin plugin)

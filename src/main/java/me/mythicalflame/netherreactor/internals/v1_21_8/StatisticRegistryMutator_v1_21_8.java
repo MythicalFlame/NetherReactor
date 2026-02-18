@@ -54,7 +54,7 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
         }
         catch (NoSuchFieldException | IllegalAccessException e)
         {
-            System.out.println("[NetherReactor] Could not initialize statistic registry injector!");
+            System.err.println("[NetherReactor] Could not initialize statistic registry injector!");
             e.printStackTrace();
             return;
         }
@@ -94,7 +94,7 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
             }
             catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
             {
-                System.out.println("[NetherReactor] Could not inject statistic " + moddedStatisticKey + " into the Minecraft Statistic registry!");
+                System.err.println("[NetherReactor] Could not inject statistic " + moddedStatisticKey + " into the Minecraft Statistic registry!");
                 e.printStackTrace();
                 return;
             }

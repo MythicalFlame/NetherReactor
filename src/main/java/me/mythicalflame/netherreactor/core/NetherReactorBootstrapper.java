@@ -4,7 +4,7 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.mythicalflame.netherreactor.api.content.Mod;
-import me.mythicalflame.netherreactor.core.registries.RegistryManager;
+import me.mythicalflame.netherreactor.core.registries.InternalsManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,26 +12,26 @@ import java.util.List;
 public class NetherReactorBootstrapper implements PluginBootstrap
 {
     public static final List<Mod> MODS = new ArrayList<>();
-    private static boolean doItemsExist = false;
-    private static boolean doEffectsExist = false;
     private static boolean doStatisticsExist = false;
+    private static boolean doEffectsExist = false;
+    private static boolean doItemsExist = false;
 
     @Override
     public void bootstrap(BootstrapContext context)
     {
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY.newHandler(
                 event -> {
-                    if (doItemsExist)
+                    if (doStatisticsExist)
                     {
-                        RegistryManager.getItemMutator().registerItems(MODS);
+                        InternalsManager.getStatisticMutator().registerStatistics(MODS);
                     }
                     if (doEffectsExist)
                     {
-                        RegistryManager.getEffectMutator().registerEffects(MODS);
+                        InternalsManager.getEffectMutator().registerEffects(MODS);
                     }
-                    if (doStatisticsExist)
+                    if (doItemsExist)
                     {
-                        RegistryManager.getStatisticMutator().registerStatistics(MODS);
+                        InternalsManager.getItemMutator().registerItems(MODS);
                     }
                 }
         ));
@@ -41,17 +41,17 @@ public class NetherReactorBootstrapper implements PluginBootstrap
     {
         MODS.add(mod);
 
-        if (!mod.getRegisteredItems().isEmpty())
+        if (!mod.getRegisteredStatistics().isEmpty())
         {
-            doItemsExist = true;
+            doStatisticsExist = true;
         }
         if (!mod.getRegisteredEffects().isEmpty())
         {
             doEffectsExist = true;
         }
-        if (!mod.getRegisteredStatistics().isEmpty())
+        if (!mod.getRegisteredItems().isEmpty())
         {
-            doStatisticsExist = true;
+            doItemsExist = true;
         }
     }
 }

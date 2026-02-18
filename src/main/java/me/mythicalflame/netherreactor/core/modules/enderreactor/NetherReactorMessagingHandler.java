@@ -4,9 +4,13 @@ import me.mythicalflame.netherreactor.api.Version;
 import me.mythicalflame.netherreactor.api.content.Mod;
 import me.mythicalflame.netherreactor.core.NetherReactorBootstrapper;
 import me.mythicalflame.netherreactor.core.NetherReactorPlugin;
+import me.mythicalflame.netherreactor.core.registries.InternalsManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -15,8 +19,7 @@ import static me.mythicalflame.netherreactor.core.NetherReactorUtilities.minimes
 
 public final class NetherReactorMessagingHandler implements PluginMessageListener
 {
-    //Receiving - Player sends client mod version + mod1name:mod1ver,mod2name:mod2ver,... installed mods
-    //Outgoing - see below
+    //Player sends client mod version + client MC version + mod1name:mod1ver,mod2name:mod2ver,... installed mods
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message)
     {
@@ -25,16 +28,29 @@ public final class NetherReactorMessagingHandler implements PluginMessageListene
             return;
         }
 
-        if (message.length < 3)
+        Bukkit.getServer().getMinecraftVersion();
+        if (message.length < 16)
         {
             NetherReactorPlugin.getLoggerStatic().info("Rejected EnderReactor player " + player.getName() + " because of insufficient message length.");
             sendUnsupportedMessage(player);
             return;
         }
 
-        //TODO client MC version
+        //Since viaversion exists, need to check if same protocol version or else new content might not have the same IDs on client and server
+        int clientProtocolVersion = ByteBuffer.wrap(Arrays.copyOfRange(message, 12, 16)).order(ByteOrder.BIG_ENDIAN).getInt();
+        if (clientProtocolVersion != InternalsManager.getInternalInterface().getServerProtocolVersion())
+        {
+            NetherReactorPlugin.getLoggerStatic().info("Rejected EnderReactor player " + player.getName() + " because of incompatible protocol version (got " + clientProtocolVersion + ", expected " + InternalsManager.getInternalInterface().getServerProtocolVersion() + ")");
+            player.sendMessage(minimessage("<red>WARNING! Your Minecraft version is different from the server's version! EnderReactor has been disabled.</red>"));
+            player.sendMessage(minimessage("<red>To use EnderReactor on this server, please join with " + Bukkit.getServer().getMinecraftVersion() + "!</red>"));
+            return;
+        }
 
-        Version clientModVersion = new Version(message[0], message[1], message[2]);
+        int clientModMajor = ByteBuffer.wrap(Arrays.copyOfRange(message, 0, 4)).order(ByteOrder.BIG_ENDIAN).getInt();
+        int clientModMinor = ByteBuffer.wrap(Arrays.copyOfRange(message, 4, 8)).order(ByteOrder.BIG_ENDIAN).getInt();
+        int clientModPatch = ByteBuffer.wrap(Arrays.copyOfRange(message, 8, 12)).order(ByteOrder.BIG_ENDIAN).getInt();
+        Version clientModVersion = new Version(clientModMajor, clientModMinor, clientModPatch);
+
         if (!EnderReactorModule.SUPPORTED_VERSIONS.contains(clientModVersion))
         {
             NetherReactorPlugin.getLoggerStatic().info("Rejected EnderReactor player " + player.getName() + " because of outdated version " + clientModVersion + ".");
@@ -42,7 +58,7 @@ public final class NetherReactorMessagingHandler implements PluginMessageListene
             return;
         }
 
-        byte[] modListBytes = Arrays.copyOfRange(message, 3, message.length);
+        byte[] modListBytes = Arrays.copyOfRange(message, 16, message.length);
         String modListString = new String(modListBytes, StandardCharsets.US_ASCII);
         String[] clientMods = modListString.split(",");
 
