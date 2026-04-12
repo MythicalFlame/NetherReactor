@@ -1,0 +1,19 @@
+plugins {
+    id 'io.papermc.paperweight.userdev' version '2.0.0-beta.21'
+    id 'java'
+}
+
+def targetJavaVersion = 21
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+dependencies {
+    paperweight.paperDevBundle('1.21.8-R0.1-SNAPSHOT')
+    compileOnly(project(':netherreactor-core'))
+}

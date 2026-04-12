@@ -1,0 +1,14 @@
+name: NetherReactor
+version: '0.1.0'
+main: me.mythicalflame.netherreactor.NetherReactorPlugin
+api-version: '1.21'
+load: STARTUP
+authors: [ MythicalFlame ]
+description: Server side modding framework for Paper and its derivatives. Not officially affiliated with PaperMC.
+bootstrapper: me.mythicalflame.netherreactor.NetherReactorBootstrapper
+dependencies:
+  server:
+    ProtocolLib:
+      load: BEFORE
+      required: false
+      join-classpath: true
