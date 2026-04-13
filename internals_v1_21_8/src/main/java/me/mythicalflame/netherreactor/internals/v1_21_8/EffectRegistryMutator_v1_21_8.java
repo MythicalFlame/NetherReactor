@@ -118,7 +118,7 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
                 return;
             }
 
-            NetherReactorRegistry.Effects.add(moddedEffect);
+            NetherReactorRegistry.Effects.add(EFFECTS.size() - 1, moddedEffect);
 
             System.out.println("[NetherReactor] Registered effect " + moddedEffectKey + " successfully!");
         }));

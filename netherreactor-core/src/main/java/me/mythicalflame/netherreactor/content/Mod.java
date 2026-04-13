@@ -61,7 +61,6 @@ public class Mod
 
     /**
      * Adds a ModdedStatistic to the mod.
-     * <p><strong>WARNING: If you add a statistic to the server, players without the Java Edition client support mod will not be able to see their statistics (due to a ProtocolLib bug), and Bukkit will throw an error whenever a custom statistic is changed.</strong></p>
      *
      * @param statistic The statistic to add.
      */
@@ -87,7 +86,6 @@ public class Mod
 
     /**
      * Gets a list of registered ModdedStatistics.
-     * <p><strong>WARNING: If you add a statistic to the server, players without the Java Edition client support mod will not be able to see their statistics (due to a ProtocolLib bug), and Bukkit will throw an error whenever a custom statistic is changed.</strong></p>
      *
      * @return An immutable List of ModdedStatistics.
      */

@@ -1,57 +1,43 @@
 package me.mythicalflame.netherreactor.modules.vanilla;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.wrappers.WrappedStatistic;
+import com.github.retrooper.packetevents.event.PacketListener;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerStatistics;
 import me.mythicalflame.netherreactor.modules.enderreactor.EnderReactorModule;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
 import java.util.HashSet;
 import java.util.Map;
 
-public final class StatisticPacketInterceptor extends PacketAdapter
+public final class StatisticPacketInterceptor implements PacketListener
 {
-    public StatisticPacketInterceptor(Plugin plugin)
-    {
-        super(plugin, ListenerPriority.HIGHEST, PacketType.Play.Server.STATISTIC);
-    }
-
     @Override
-    public void onPacketSending(PacketEvent event)
+    public void onPacketSend(PacketSendEvent event)
     {
-        Player player = event.getPlayer();
-        if (event.getPacketType() == PacketType.Play.Server.STATISTIC)
+        if (EnderReactorModule.hasPlayer(event.getPlayer()))
         {
-            if (EnderReactorModule.hasPlayer(player))
-            {
-                return;
-            }
+            return;
+        }
 
-            event.setCancelled(true);
+        if (event.getPacketType() == PacketType.Play.Server.STATISTICS)
+        {
+            WrapperPlayServerStatistics packet = new WrapperPlayServerStatistics(event);
 
-            //ProtocolLib has a bug that causes an error on reading statistics
-            //TODO add back in when bug fixed
-            /*
-            PacketContainer packet = event.getPacket();
-
-            Map<WrappedStatistic, Integer> stats = packet.getStatisticMaps().read(0);
+            Map<String, Integer> stats = packet.getStatistics();
             HashSet<String> badNames = new HashSet<>();
 
             stats.forEach((stat, value) -> {
-                if (!NetherReactorRegistry.Statistics.containsName(stat.getName()))
+                if (!NetherReactorRegistry.Statistics.containsName(stat))
                 {
-                    badNames.add(stat.getName());
+                    badNames.add(stat);
                 }
             });
 
             badNames.forEach(stats::remove);
+            packet.setStatistics(stats);
 
-            packet.getStatisticMaps().write(0, stats);*/
+            event.markForReEncode(true);
         }
     }
 }

@@ -3,6 +3,7 @@ package me.mythicalflame.netherreactor.registries;
 import me.mythicalflame.netherreactor.content.ModdedEffect;
 import me.mythicalflame.netherreactor.content.ModdedStatistic;
 import net.kyori.adventure.key.Key;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,16 +13,21 @@ public final class NetherReactorRegistry
     //TODO items
     public static final class Effects
     {
-        private static final HashMap<Key, ModdedEffect> EFFECTS = new HashMap<>();
+        private static final HashMap<Key, Pair<Integer, ModdedEffect>> EFFECTS = new HashMap<>();
 
-        public static ModdedEffect get(Key key)
+        public static HashMap<Key, Pair<Integer, ModdedEffect>> getEffects()
+        {
+            return EFFECTS;
+        }
+
+        public static Pair<Integer, ModdedEffect> get(Key key)
         {
             return EFFECTS.get(key);
         }
 
-        public static void add(ModdedEffect effect)
+        public static void add(int id, ModdedEffect effect)
         {
-            EFFECTS.put(effect.getKey(), effect);
+            EFFECTS.put(effect.getKey(), Pair.of(id, effect));
         }
 
         public static boolean isEmpty()
@@ -34,6 +40,11 @@ public final class NetherReactorRegistry
     {
         private static final HashMap<Key, ModdedStatistic> STATISTICS = new HashMap<>();
         private static final HashSet<String> STATISTIC_NAMES = new HashSet<>();
+
+        public static HashSet<String> getStatisticNames()
+        {
+            return STATISTIC_NAMES;
+        }
 
         public static ModdedStatistic get(Key key)
         {
