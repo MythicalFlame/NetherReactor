@@ -79,7 +79,7 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
 
                 ResourceKey<MobEffect> resourceKey = ResourceKey.create(Registries.MOB_EFFECT, ResourceLocation.fromNamespaceAndPath(moddedEffectKey.namespace(), moddedEffectKey.value()));
 
-                MobEffect minecraftEffect = mobEffectConstructor.newInstance(convertPaperEffectCategory(moddedEffect.getCategory()), moddedEffect.getColor());
+                MobEffect minecraftEffect = mobEffectConstructor.newInstance(convertPaperEffectCategory(moddedEffect.getCategory()), moddedEffect.getColorInt());
                 moddedEffect.getAttributes().forEach(entry -> {
                     Holder<Attribute> attributeHolder = convertKeyAttribute(entry.getKey());
                     if (attributeHolder == null)

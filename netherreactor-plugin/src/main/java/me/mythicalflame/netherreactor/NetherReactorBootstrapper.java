@@ -11,6 +11,7 @@ import java.util.List;
 public class NetherReactorBootstrapper implements PluginBootstrap
 {
     public static final List<Mod> MODS = new ArrayList<>();
+    private static boolean hasAlreadyRun = false;
     private static boolean doStatisticsExist = false;
     private static boolean doEffectsExist = false;
     private static boolean doItemsExist = false;
@@ -20,6 +21,13 @@ public class NetherReactorBootstrapper implements PluginBootstrap
     {
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY.newHandler(
                 event -> {
+                    //Spark profiler is weird and calls this method when you stop profiling for some reason
+                    if (hasAlreadyRun)
+                    {
+                        return;
+                    }
+                    hasAlreadyRun = true;
+
                     if (doStatisticsExist)
                     {
                         InternalsManager.getStatisticMutator().registerStatistics(MODS);

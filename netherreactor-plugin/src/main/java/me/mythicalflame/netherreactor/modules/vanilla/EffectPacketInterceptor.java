@@ -5,6 +5,8 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.advancements.Advancement;
 import com.github.retrooper.packetevents.protocol.advancements.AdvancementDisplay;
 import com.github.retrooper.packetevents.protocol.advancements.AdvancementHolder;
+import com.github.retrooper.packetevents.protocol.chat.ChatType;
+import com.github.retrooper.packetevents.protocol.chat.message.ChatMessage;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
@@ -25,6 +27,8 @@ import com.github.retrooper.packetevents.protocol.recipe.display.slot.SlotDispla
 import com.github.retrooper.packetevents.protocol.util.WeightedList;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
+import io.papermc.paper.datacomponent.DataComponentBuilder;
+import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.DeathProtection;
@@ -33,20 +37,32 @@ import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.datacomponent.item.SuspiciousStewEffects;
 import io.papermc.paper.datacomponent.item.consumable.ConsumeEffect;
 import io.papermc.paper.potion.SuspiciousEffectEntry;
+import me.mythicalflame.netherreactor.NetherReactorUtilities;
+import me.mythicalflame.netherreactor.content.ModdedEffect;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 import me.mythicalflame.netherreactor.modules.enderreactor.EnderReactorModule;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.TranslationArgument;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Registry;
+import org.bukkit.UnsafeValues;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectTypeCategory;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
@@ -56,6 +72,11 @@ public final class EffectPacketInterceptor implements PacketListener
     @Override
     public void onPacketSend(PacketSendEvent event)
     {
+        if (event.isCancelled())
+        {
+            return;
+        }
+
         Player player = event.getPlayer();
         if (EnderReactorModule.hasPlayer(player))
         {
@@ -66,18 +87,31 @@ public final class EffectPacketInterceptor implements PacketListener
 
         if (event.getPacketType() == PacketType.Play.Server.REMOVE_ENTITY_EFFECT)
         {
+            //TODO dont show if it didnt show up in entity_effect
             WrapperPlayServerRemoveEntityEffect packet = new WrapperPlayServerRemoveEntityEffect(event);
-            if (NetherReactorRegistry.Effects.get(packet.getPotionType().getName().key()) != null)
+            Pair<Integer, ModdedEffect> effectPair = NetherReactorRegistry.Effects.get(packet.getPotionType().getName().key());
+            if (effectPair != null)
             {
                 event.setCancelled(true);
+                if (!effectPair.getRight().displayRemoved(player))
+                {
+                    return;
+                }
+                player.sendActionBar(text().content("Removed ").append(potionEffectToComponent(packet.getPotionType().getName().key(), 0, null)));
             }
         }
         else if (event.getPacketType() == PacketType.Play.Server.ENTITY_EFFECT)
         {
             WrapperPlayServerEntityEffect packet = new WrapperPlayServerEntityEffect(event);
-            if (NetherReactorRegistry.Effects.get(packet.getPotionType().getName().key()) != null)
+            Pair<Integer, ModdedEffect> effectPair = NetherReactorRegistry.Effects.get(packet.getPotionType().getName().key());
+            if (effectPair != null)
             {
                 event.setCancelled(true);
+                if (!effectPair.getRight().displayUpdated(player, packet.getEffectAmplifier(), packet.getEffectDurationTicks(), packet.isAmbient(), packet.isVisible(), packet.isShowIcon()))
+                {
+                    return;
+                }
+                player.sendActionBar(text().content("Applied ").append(potionEffectToComponent(packet.getPotionType().getName().key(), packet.getEffectAmplifier(), packet.getEffectDurationTicks())));
             }
         }
         else if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS)
@@ -393,6 +427,54 @@ public final class EffectPacketInterceptor implements PacketListener
                 event.markForReEncode(true);
             }
         }
+        else if (event.getPacketType() == PacketType.Play.Server.SYSTEM_CHAT_MESSAGE)
+        {
+            WrapperPlayServerSystemChatMessage packet = new WrapperPlayServerSystemChatMessage(event);
+            Component message = packet.getMessage();
+            Component newMessage = cleanComponent(message);
+            hasChanged = (message != newMessage);
+            if (hasChanged)
+            {
+                packet.setMessage(newMessage);
+                event.markForReEncode(true);
+            }
+        }
+        else if (event.getPacketType() == PacketType.Play.Server.DISGUISED_CHAT)
+        {
+            WrapperPlayServerDisguisedChat packet = new WrapperPlayServerDisguisedChat(event);
+            ChatType.Bound formatting = packet.getChatFormatting();
+            Component name = formatting.getName();
+            Component newName = cleanComponent(name);
+            hasChanged = (name != newName);
+            Component targetName = formatting.getTargetName();
+            Component newTargetName = cleanComponent(targetName);
+            hasChanged |= (targetName != newTargetName);
+            Component message = packet.getMessage();
+            Component newMessage = cleanComponent(message);
+            hasChanged |= (message != newMessage);
+            if (hasChanged)
+            {
+                formatting.setName(newName);
+                formatting.setTargetName(newTargetName);
+                packet.setChatFormatting(formatting);
+                packet.setMessage(newMessage);
+                event.markForReEncode(true);
+            }
+        }
+        else if (event.getPacketType() == PacketType.Play.Server.CHAT_MESSAGE)
+        {
+            WrapperPlayServerChatMessage packet = new WrapperPlayServerChatMessage(event);
+            ChatMessage message = packet.getMessage();
+            Component content = message.getChatContent();
+            Component newContent = cleanComponent(content);
+            hasChanged = (content != newContent);
+            if (hasChanged)
+            {
+                message.setChatContent(newContent);
+                packet.setMessage(message);
+                event.markForReEncode(true);
+            }
+        }
     }
 
     private boolean cleanSlotDisplay(SlotDisplay<?> display)
@@ -409,6 +491,95 @@ public final class EffectPacketInterceptor implements PacketListener
         }
 
         return false;
+    }
+
+    private Component cleanComponent(Component component)
+    {
+        if (component == null)
+        {
+            return null;
+        }
+
+        if (component.hoverEvent() != null)
+        {
+            if (component.hoverEvent().action() == HoverEvent.Action.SHOW_ITEM)
+            {
+                HoverEvent.ShowItem showItem = (HoverEvent.ShowItem) component.hoverEvent().value();
+                //1.21.11 has a method to deserialize from the event
+                //TODO remove when min version 1.21.11
+                try
+                {
+                    Method deserializeMethod = UnsafeValues.class.getDeclaredMethod("deserializeItemHover", HoverEvent.ShowItem.class);
+                    deserializeMethod.setAccessible(true);
+                    org.bukkit.inventory.ItemStack stack = (org.bukkit.inventory.ItemStack) deserializeMethod.invoke(Bukkit.getUnsafe(), showItem);
+                    if (cleanItemStack(stack))
+                    {
+                        System.out.println("CHANGES MADE");
+                        component = component.hoverEvent(stack);
+                    }
+                }
+                catch (Exception ignored)
+                {
+                    //ignore components I guess
+                    component = component.hoverEvent(Registry.ITEM.get(showItem.item()).createItemStack(showItem.count()));
+                }
+            }
+            else if (component.hoverEvent().action() == HoverEvent.Action.SHOW_TEXT)
+            {
+                Component showText = (Component) component.hoverEvent().value();
+                Component newShowText = cleanComponent(showText);
+                if (showText != newShowText)
+                {
+                    component = component.hoverEvent(newShowText);
+                }
+            }
+        }
+
+        List<Component> newChildren = new ArrayList<>(component.children().size());
+        boolean childrenChanged = false;
+        for (Component child : component.children())
+        {
+            Component cleanedChild = cleanComponent(child);
+            newChildren.add(cleanedChild);
+            if (child != cleanedChild)
+            {
+                childrenChanged = true;
+            }
+        }
+
+        if (childrenChanged)
+        {
+            component = component.children(newChildren);
+        }
+
+        if (component instanceof TranslatableComponent translatable)
+        {
+            List<TranslationArgument> newArgs = new ArrayList<>(translatable.arguments().size());
+            boolean argsChanged = false;
+            for (TranslationArgument arg : translatable.arguments())
+            {
+                if (arg.value() instanceof Component argComponent)
+                {
+                    Component cleanedArg = cleanComponent(argComponent);
+                    newArgs.add(TranslationArgument.component(cleanedArg));
+                    if (argComponent != cleanedArg)
+                    {
+                        argsChanged = true;
+                    }
+                }
+                else
+                {
+                    newArgs.add(arg);
+                }
+            }
+
+            if (argsChanged)
+            {
+                component = translatable.arguments(newArgs);
+            }
+        }
+
+        return component;
     }
 
     //Removes non-vanilla effect data from the stack
@@ -453,7 +624,7 @@ public final class EffectPacketInterceptor implements PacketListener
                 potionEffects.addAll(potionData.potion().getPotionEffects());
             }
             potionEffects.addAll(potionData.customEffects());
-            ArrayList<Pair<Key, Integer>> removedEffects = new ArrayList<>();
+            ArrayList<org.bukkit.potion.PotionEffect> removedEffects = new ArrayList<>();
 
             for (int i = 0; i < potionEffects.size(); ++i)
             {
@@ -461,28 +632,64 @@ public final class EffectPacketInterceptor implements PacketListener
                 {
                     result = true;
                     hasChanged = true;
-                    removedEffects.add(Pair.of(potionEffects.get(i).getType().key(), potionEffects.get(i).getDuration()));
+                    removedEffects.add(potionEffects.get(i));
                     potionEffects.remove(i);
                     --i;
                 }
             }
 
-            //TODO 1.21.5: hide tooltip if empty for potion contents
-            //TODO: calculate custom colour?
             if (hasChanged)
             {
-                stack.setData(DataComponentTypes.POTION_CONTENTS, PotionContents.potionContents()
+                PotionContents.Builder newPotionData = PotionContents.potionContents()
                         .addCustomEffects(potionEffects)
-                        .customColor(potionData.customColor())
                         .customName(potionData.customName())
-                        .potion(potionData.potion()));
+                        .potion(potionData.potion());
+                if (potionData.customColor() == null)
+                {
+                    newPotionData.customColor(getPotionColor(potionEffects, removedEffects));
+                }
+                else
+                {
+                    newPotionData.customColor(potionData.customColor());
+                }
+                stack.setData(DataComponentTypes.POTION_CONTENTS, newPotionData);
                 List<Component> lore = new ArrayList<>(stack.getData(DataComponentTypes.LORE).lines());
                 for (int i = removedEffects.size() - 1; i >= 0; --i)
                 {
-                    Pair<Key, Integer> removedEffect = removedEffects.get(i);
-                    lore.addFirst(potionEffectToComponent(removedEffect.getLeft(), removedEffect.getRight()));
+                    org.bukkit.potion.PotionEffect removedEffect = removedEffects.get(i);
+                    lore.addFirst(potionEffectToComponent(removedEffect.getType().key(), removedEffect.getAmplifier(), removedEffect.getDuration()));
                 }
                 stack.setData(DataComponentTypes.LORE, ItemLore.lore(lore));
+
+                if (potionEffects.isEmpty())
+                {
+                    //1.21.5+, hide potion contents if empty (so it doesn't say no effect)
+                    //TODO remove if 1.21.5 becomes min version
+                    try
+                    {
+                        Object tooltipDisplay = DataComponentTypes.class.getField("TOOLTIP_DISPLAY").get(null);
+
+                        Set<DataComponentType> hiddenComponents = new HashSet<>();
+                        Object tooltipData = org.bukkit.inventory.ItemStack.class.getMethod("getData", DataComponentType.Valued.class).invoke(stack, tooltipDisplay);
+                        Method getComponentsMethod = tooltipData.getClass().getDeclaredMethod("hiddenComponents");
+                        getComponentsMethod.setAccessible(true);
+                        Object oldHiddenComponents = getComponentsMethod.invoke(tooltipData);
+                        Method addAllMethod = Set.class.getDeclaredMethod("addAll", Collection.class);
+                        addAllMethod.setAccessible(true);
+                        addAllMethod.invoke(hiddenComponents, oldHiddenComponents);
+                        hiddenComponents.add(DataComponentTypes.POTION_CONTENTS);
+
+                        Method builderMethod = Class.forName("io.papermc.paper.datacomponent.item.TooltipDisplay").getDeclaredMethod("tooltipDisplay");
+                        builderMethod.setAccessible(true);
+                        Object tooltipBuilder = builderMethod.invoke(null);
+                        Method setComponentsMethod = tooltipBuilder.getClass().getDeclaredMethod("hiddenComponents", Set.class);
+                        setComponentsMethod.setAccessible(true);
+                        tooltipBuilder = setComponentsMethod.invoke(tooltipBuilder, hiddenComponents);
+                        org.bukkit.inventory.ItemStack.class.getMethod("setData", DataComponentType.Valued.class, DataComponentBuilder.class)
+                                .invoke(stack, tooltipDisplay, tooltipBuilder);
+                    }
+                    catch (Exception ignored) {}
+                }
             }
         }
 
@@ -572,8 +779,58 @@ public final class EffectPacketInterceptor implements PacketListener
         return result;
     }
 
-    //TODO cache?
-    private static Component potionEffectToComponent(Key key, int length)
+    private static Color getPotionColor(ArrayList<org.bukkit.potion.PotionEffect> effects, ArrayList<org.bukkit.potion.PotionEffect> removed)
+    {
+        if (effects.isEmpty() && removed.isEmpty())
+        {
+            return null;
+        }
+
+        float red = 0F;
+        float green = 0F;
+        float blue = 0F;
+        int numColors = 0;
+
+        for (org.bukkit.potion.PotionEffect effect : effects)
+        {
+            if (!effect.hasParticles())
+            {
+                continue;
+            }
+            Color color = effect.getType().getColor();
+            for (int i = 0; i <= effect.getAmplifier(); ++i)
+            {
+                red += color.getRed() / 255F;
+                green += color.getGreen() / 255F;
+                blue += color.getBlue() / 255F;
+                ++numColors;
+            }
+        }
+
+        for (org.bukkit.potion.PotionEffect effect : removed)
+        {
+            if (!effect.hasParticles())
+            {
+                continue;
+            }
+            Color color = effect.getType().getColor();
+            for (int i = 0; i <= effect.getAmplifier(); ++i)
+            {
+                red += color.getRed() / 255F;
+                green += color.getGreen() / 255F;
+                blue += color.getBlue() / 255F;
+                ++numColors;
+            }
+        }
+
+        red = (red / numColors) * 255F;
+        green = (green / numColors) * 255F;
+        blue = (blue / numColors) * 255F;
+
+        return Color.fromRGB((int) red, (int) green, (int) blue);
+    }
+
+    private static Component potionEffectToComponent(Key key, int amplifier, Integer length)
     {
         TranslatableComponent.Builder component = translatable().key("effect." + key.namespace() + "." + key.value()).decoration(TextDecoration.ITALIC, false);
         if (NetherReactorRegistry.Effects.getEffects().get(key).getRight().getCategory() == PotionEffectTypeCategory.HARMFUL)
@@ -585,31 +842,40 @@ public final class EffectPacketInterceptor implements PacketListener
             component.color(NamedTextColor.BLUE);
         }
 
-        length /= 20;
-        int minutes = length / 60;
-        int seconds = length % 60;
-
-        String minutesRep;
-        if (minutes < 10)
+        if (amplifier > 0)
         {
-            minutesRep = "0" + minutes;
-        }
-        else
-        {
-            minutesRep = Integer.toString(minutes);
+            component.append(text().content(" " + NetherReactorUtilities.RomanNumeral.getRomanNumber(amplifier + 1)));
         }
 
-        String secondsRep;
-        if (seconds < 10)
+        if (length != null)
         {
-            secondsRep = "0" + seconds;
-        }
-        else
-        {
-            secondsRep = Integer.toString(seconds);
-        }
 
-        component.append(text().content(" (" + minutesRep + ":" + secondsRep + ")"));
+            length /= 20;
+            int minutes = length / 60;
+            int seconds = length % 60;
+
+            String minutesRep;
+            if (minutes < 10)
+            {
+                minutesRep = "0" + minutes;
+            }
+            else
+            {
+                minutesRep = Integer.toString(minutes);
+            }
+
+            String secondsRep;
+            if (seconds < 10)
+            {
+                secondsRep = "0" + seconds;
+            }
+            else
+            {
+                secondsRep = Integer.toString(seconds);
+            }
+
+            component.append(text().content(" (" + minutesRep + ":" + secondsRep + ")"));
+        }
 
         return component.build();
     }
