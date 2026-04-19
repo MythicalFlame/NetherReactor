@@ -59,6 +59,7 @@ import org.bukkit.potion.PotionEffectTypeCategory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -69,6 +70,9 @@ import static net.kyori.adventure.text.Component.translatable;
 
 public final class EffectPacketInterceptor implements PacketListener
 {
+    //Stuff not to show in remove effect
+    private static final HashMap<Player, HashSet<Key>> playerEffectsMap = new HashMap<>();
+
     @Override
     public void onPacketSend(PacketSendEvent event)
     {
@@ -87,8 +91,18 @@ public final class EffectPacketInterceptor implements PacketListener
 
         if (event.getPacketType() == PacketType.Play.Server.REMOVE_ENTITY_EFFECT)
         {
-            //TODO dont show if it didnt show up in entity_effect
             WrapperPlayServerRemoveEntityEffect packet = new WrapperPlayServerRemoveEntityEffect(event);
+
+            if (!playerEffectsMap.containsKey(player))
+            {
+                playerEffectsMap.put(player, new HashSet<>());
+            }
+            if (playerEffectsMap.get(player).contains(packet.getPotionType().getName().key()))
+            {
+                playerEffectsMap.get(player).remove(packet.getPotionType().getName().key());
+                return;
+            }
+
             Pair<Integer, ModdedEffect> effectPair = NetherReactorRegistry.Effects.get(packet.getPotionType().getName().key());
             if (effectPair != null)
             {
@@ -107,10 +121,17 @@ public final class EffectPacketInterceptor implements PacketListener
             if (effectPair != null)
             {
                 event.setCancelled(true);
+                if (!playerEffectsMap.containsKey(player))
+                {
+                    playerEffectsMap.put(player, new HashSet<>());
+                }
                 if (!effectPair.getRight().displayUpdated(player, packet.getEffectAmplifier(), packet.getEffectDurationTicks(), packet.isAmbient(), packet.isVisible(), packet.isShowIcon()))
                 {
+                    playerEffectsMap.get(player).add(packet.getPotionType().getName().key());
                     return;
                 }
+                playerEffectsMap.get(player).remove(packet.getPotionType().getName().key());
+
                 player.sendActionBar(text().content("Applied ").append(potionEffectToComponent(packet.getPotionType().getName().key(), packet.getEffectAmplifier(), packet.getEffectDurationTicks())));
             }
         }
@@ -505,8 +526,7 @@ public final class EffectPacketInterceptor implements PacketListener
             if (component.hoverEvent().action() == HoverEvent.Action.SHOW_ITEM)
             {
                 HoverEvent.ShowItem showItem = (HoverEvent.ShowItem) component.hoverEvent().value();
-                //1.21.11 has a method to deserialize from the event
-                //TODO remove when min version 1.21.11
+                //TODO remove reflection when min version 1.21.11
                 try
                 {
                     Method deserializeMethod = UnsafeValues.class.getDeclaredMethod("deserializeItemHover", HoverEvent.ShowItem.class);
@@ -514,13 +534,12 @@ public final class EffectPacketInterceptor implements PacketListener
                     org.bukkit.inventory.ItemStack stack = (org.bukkit.inventory.ItemStack) deserializeMethod.invoke(Bukkit.getUnsafe(), showItem);
                     if (cleanItemStack(stack))
                     {
-                        System.out.println("CHANGES MADE");
                         component = component.hoverEvent(stack);
                     }
                 }
                 catch (Exception ignored)
                 {
-                    //ignore components I guess
+                    //Ignore components I guess
                     component = component.hoverEvent(Registry.ITEM.get(showItem.item()).createItemStack(showItem.count()));
                 }
             }
@@ -663,8 +682,7 @@ public final class EffectPacketInterceptor implements PacketListener
 
                 if (potionEffects.isEmpty())
                 {
-                    //1.21.5+, hide potion contents if empty (so it doesn't say no effect)
-                    //TODO remove if 1.21.5 becomes min version
+                    //TODO remove reflection when 1.21.5 becomes min version
                     try
                     {
                         Object tooltipDisplay = DataComponentTypes.class.getField("TOOLTIP_DISPLAY").get(null);

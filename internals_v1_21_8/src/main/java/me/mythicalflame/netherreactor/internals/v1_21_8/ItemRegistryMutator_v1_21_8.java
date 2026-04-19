@@ -133,7 +133,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 /*
     private DataComponentType thing(io.papermc.paper.datacomponent.DataComponentType paperType)
     {
-        //custom data
+        //Custom data
         if (paperType.equals(DataComponentTypes.MAX_STACK_SIZE))
         {
             return DataComponents.MAX_STACK_SIZE;

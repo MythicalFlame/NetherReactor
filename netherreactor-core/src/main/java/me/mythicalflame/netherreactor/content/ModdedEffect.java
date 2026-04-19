@@ -117,7 +117,7 @@ public class ModdedEffect
      *
      * @param attribute The attribute key for this modifier.
      * @param modifier The modifier to add.
-     * @return The same ModdedEffect (for chaining).
+     * @return The same ModdedEffect.
      */
     public ModdedEffect addAttributeModifier(Key attribute, AttributeModifier modifier)
     {
@@ -129,10 +129,10 @@ public class ModdedEffect
      * Adds an attribute modifier to the effect.
      *
      * @param attribute The attribute key for this modifier.
-     * @param key The key (NOT the attribute) for this modifier.
+     * @param key The key for this modifier.
      * @param value The amount for this modifier.
      * @param operation The operation for this modifier.
-     * @return The same ModdedEffect (for chaining).
+     * @return The same ModdedEffect.
      */
     public ModdedEffect addAttributeModifier(Key attribute, NamespacedKey key, double value, AttributeModifier.Operation operation)
     {
