@@ -21,7 +21,6 @@ import org.bukkit.potion.PotionEffectTypeCategory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
@@ -111,7 +110,7 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
 
                 unregisteredIntrusiveHolders.set(EFFECTS, null);
             }
-            catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e)
+            catch (Exception e)
             {
                 System.out.println("[NetherReactor] Could not inject effect " + moddedEffectKey + " into the Minecraft Effect registry!");
                 e.printStackTrace();

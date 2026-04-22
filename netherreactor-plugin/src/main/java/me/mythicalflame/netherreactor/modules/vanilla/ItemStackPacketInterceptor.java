@@ -21,6 +21,7 @@ import com.github.retrooper.packetevents.protocol.recipe.display.ShapedCraftingR
 import com.github.retrooper.packetevents.protocol.recipe.display.ShapelessCraftingRecipeDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.SmithingRecipeDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.StonecutterRecipeDisplay;
+import com.github.retrooper.packetevents.protocol.recipe.display.slot.ItemSlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.ItemStackSlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.SlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.SlotDisplayTypes;
@@ -30,15 +31,19 @@ import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.papermc.paper.datacomponent.DataComponentBuilder;
 import io.papermc.paper.datacomponent.DataComponentType;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.BundleContents;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.DeathProtection;
+import io.papermc.paper.datacomponent.item.ItemContainerContents;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import io.papermc.paper.datacomponent.item.PotionContents;
 import io.papermc.paper.datacomponent.item.SuspiciousStewEffects;
 import io.papermc.paper.datacomponent.item.consumable.ConsumeEffect;
 import io.papermc.paper.potion.SuspiciousEffectEntry;
+import me.mythicalflame.netherreactor.InternalsManager;
 import me.mythicalflame.netherreactor.NetherReactorUtilities;
 import me.mythicalflame.netherreactor.content.ModdedEffect;
+import me.mythicalflame.netherreactor.content.ModdedItem;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 import me.mythicalflame.netherreactor.modules.enderreactor.EnderReactorModule;
 import net.kyori.adventure.key.Key;
@@ -51,10 +56,13 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.UnsafeValues;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectTypeCategory;
+import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -68,8 +76,17 @@ import java.util.Set;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
 
-public final class EffectPacketInterceptor implements PacketListener
+public final class ItemStackPacketInterceptor implements PacketListener
 {
+    private final boolean ignoreItems;
+    private final boolean ignoreEffects;
+
+    public ItemStackPacketInterceptor(boolean ignoreItems, boolean ignoreEffects)
+    {
+        this.ignoreItems = ignoreItems;
+        this.ignoreEffects = ignoreEffects;
+    }
+
     //Stuff not to show in remove effect
     private static final HashMap<Player, HashSet<Key>> playerEffectsMap = new HashMap<>();
 
@@ -91,6 +108,11 @@ public final class EffectPacketInterceptor implements PacketListener
 
         if (event.getPacketType() == PacketType.Play.Server.REMOVE_ENTITY_EFFECT)
         {
+            if (ignoreEffects)
+            {
+                return;
+            }
+
             WrapperPlayServerRemoveEntityEffect packet = new WrapperPlayServerRemoveEntityEffect(event);
 
             if (!playerEffectsMap.containsKey(player))
@@ -116,6 +138,11 @@ public final class EffectPacketInterceptor implements PacketListener
         }
         else if (event.getPacketType() == PacketType.Play.Server.ENTITY_EFFECT)
         {
+            if (ignoreEffects)
+            {
+                return;
+            }
+
             WrapperPlayServerEntityEffect packet = new WrapperPlayServerEntityEffect(event);
             Pair<Integer, ModdedEffect> effectPair = NetherReactorRegistry.Effects.get(packet.getPotionType().getName().key());
             if (effectPair != null)
@@ -138,30 +165,37 @@ public final class EffectPacketInterceptor implements PacketListener
         else if (event.getPacketType() == PacketType.Play.Server.WINDOW_ITEMS)
         {
             WrapperPlayServerWindowItems packet = new WrapperPlayServerWindowItems(event);
+
             Optional<com.github.retrooper.packetevents.protocol.item.ItemStack> carriedOptional = packet.getCarriedItem();
             if (carriedOptional.isPresent())
             {
                 org.bukkit.inventory.ItemStack carriedSlot = SpigotConversionUtil.toBukkitItemStack(carriedOptional.get());
-                hasChanged = cleanItemStack(carriedSlot);
-                if (hasChanged)
+                if (cleanItemStack(carriedSlot))
                 {
+                    hasChanged = true;
                     packet.setCarriedItem(SpigotConversionUtil.fromBukkitItemStack(carriedSlot));
                 }
             }
 
+            boolean listChanged = false;
             List<com.github.retrooper.packetevents.protocol.item.ItemStack> windowSlotsPE = packet.getItems();
             ArrayList<org.bukkit.inventory.ItemStack> windowSlots = new ArrayList<>(windowSlotsPE.size());
             windowSlotsPE.forEach(peStack -> windowSlots.add(SpigotConversionUtil.toBukkitItemStack(peStack)));
             for (org.bukkit.inventory.ItemStack stack : windowSlots)
             {
-                hasChanged |= cleanItemStack(stack);
+                listChanged |= cleanItemStack(stack);
+            }
+
+            if (listChanged)
+            {
+                hasChanged = true;
+                windowSlotsPE.clear();
+                windowSlots.forEach(stack -> windowSlotsPE.add(SpigotConversionUtil.fromBukkitItemStack(stack)));
+                packet.setItems(windowSlotsPE);
             }
 
             if (hasChanged)
             {
-                windowSlotsPE.clear();
-                windowSlots.forEach(stack -> windowSlotsPE.add(SpigotConversionUtil.fromBukkitItemStack(stack)));
-                packet.setItems(windowSlotsPE);
                 event.markForReEncode(true);
             }
         }
@@ -170,9 +204,8 @@ public final class EffectPacketInterceptor implements PacketListener
             WrapperPlayServerSetSlot packet = new WrapperPlayServerSetSlot(event);
 
             org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(packet.getItem());
-            hasChanged = cleanItemStack(stack);
 
-            if (hasChanged)
+            if (cleanItemStack(stack))
             {
                 packet.setItem(SpigotConversionUtil.fromBukkitItemStack(stack));
                 event.markForReEncode(true);
@@ -192,10 +225,9 @@ public final class EffectPacketInterceptor implements PacketListener
                     com.github.retrooper.packetevents.protocol.particle.Particle<ParticleItemStackData> itemParticle = (com.github.retrooper.packetevents.protocol.particle.Particle<ParticleItemStackData>) particle;
                     ParticleItemStackData data = itemParticle.getData();
                     org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(data.getItemStack());
-                    boolean changeParticle = cleanItemStack(stack);
-                    hasChanged |= changeParticle;
-                    if (changeParticle)
+                    if (cleanItemStack(stack))
                     {
+                        hasChanged = true;
                         data.setItemStack(SpigotConversionUtil.fromBukkitItemStack(stack));
                         itemParticle.setData(data);
                         particles.set(i, particleEntry);
@@ -214,9 +246,8 @@ public final class EffectPacketInterceptor implements PacketListener
             WrapperPlayServerSetCursorItem packet = new WrapperPlayServerSetCursorItem(event);
 
             org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(packet.getStack());
-            hasChanged = cleanItemStack(stack);
 
-            if (hasChanged)
+            if (cleanItemStack(stack))
             {
                 packet.setStack(SpigotConversionUtil.fromBukkitItemStack(stack));
                 event.markForReEncode(true);
@@ -230,26 +261,23 @@ public final class EffectPacketInterceptor implements PacketListener
             for (MerchantOffer trade : merchantOffers)
             {
                 org.bukkit.inventory.ItemStack result = SpigotConversionUtil.toBukkitItemStack(trade.getOutputItem());
-                boolean changeStack = cleanItemStack(result);
-                hasChanged |= changeStack;
-                if (changeStack)
+                if (cleanItemStack(result))
                 {
+                    hasChanged = true;
                     trade.setOutputItem(SpigotConversionUtil.fromBukkitItemStack(result));
                 }
 
                 org.bukkit.inventory.ItemStack first = SpigotConversionUtil.toBukkitItemStack(trade.getFirstInputItem());
-                changeStack = cleanItemStack(first);
-                hasChanged |= changeStack;
-                if (changeStack)
+                if (cleanItemStack(first))
                 {
+                    hasChanged = true;
                     trade.setFirstInputItem(SpigotConversionUtil.fromBukkitItemStack(first));
                 }
 
                 org.bukkit.inventory.ItemStack second = SpigotConversionUtil.toBukkitItemStack(trade.getSecondInputItem());
-                changeStack = cleanItemStack(second);
-                hasChanged |= changeStack;
-                if (changeStack)
+                if (cleanItemStack(second))
                 {
+                    hasChanged = true;
                     trade.setSecondInputItem(SpigotConversionUtil.fromBukkitItemStack(second));
                 }
             }
@@ -269,8 +297,7 @@ public final class EffectPacketInterceptor implements PacketListener
                 com.github.retrooper.packetevents.protocol.particle.Particle<ParticleItemStackData> itemParticle = (com.github.retrooper.packetevents.protocol.particle.Particle<ParticleItemStackData>) particle;
                 ParticleItemStackData data = itemParticle.getData();
                 org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(data.getItemStack());
-                hasChanged = cleanItemStack(stack);
-                if (hasChanged)
+                if (cleanItemStack(stack))
                 {
                     data.setItemStack(SpigotConversionUtil.fromBukkitItemStack(stack));
                     itemParticle.setData(data);
@@ -284,9 +311,8 @@ public final class EffectPacketInterceptor implements PacketListener
             WrapperPlayServerSetPlayerInventory packet = new WrapperPlayServerSetPlayerInventory(event);
 
             org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(packet.getStack());
-            hasChanged = cleanItemStack(stack);
 
-            if (hasChanged)
+            if (cleanItemStack(stack))
             {
                 packet.setStack(SpigotConversionUtil.fromBukkitItemStack(stack));
                 event.markForReEncode(true);
@@ -304,10 +330,9 @@ public final class EffectPacketInterceptor implements PacketListener
                 {
                     EntityData<com.github.retrooper.packetevents.protocol.item.ItemStack> itemMetadata = (EntityData<com.github.retrooper.packetevents.protocol.item.ItemStack>) data;
                     org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(itemMetadata.getValue());
-                    boolean changeData = cleanItemStack(stack);
-                    hasChanged |= changeData;
-                    if (changeData)
+                    if (cleanItemStack(stack))
                     {
+                        hasChanged = true;
                         itemMetadata.setValue(SpigotConversionUtil.fromBukkitItemStack(stack));
                     }
                 }
@@ -327,10 +352,9 @@ public final class EffectPacketInterceptor implements PacketListener
             for (Equipment equip : equipment)
             {
                 org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(equip.getItem());
-                boolean equipmentChanged = cleanItemStack(stack);
-                hasChanged |= equipmentChanged;
-                if (equipmentChanged)
+                if (cleanItemStack(stack))
                 {
+                    hasChanged = true;
                     equip.setItem(SpigotConversionUtil.fromBukkitItemStack(stack));
                 }
             }
@@ -355,10 +379,9 @@ public final class EffectPacketInterceptor implements PacketListener
                     continue;
                 }
                 org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(display.getIcon());
-                boolean changeIcon = cleanItemStack(stack);
-                hasChanged |= changeIcon;
-                if (changeIcon)
+                if (cleanItemStack(stack))
                 {
+                    hasChanged = true;
                     display.setIcon(SpigotConversionUtil.fromBukkitItemStack(stack));
                 }
             }
@@ -453,8 +476,7 @@ public final class EffectPacketInterceptor implements PacketListener
             WrapperPlayServerSystemChatMessage packet = new WrapperPlayServerSystemChatMessage(event);
             Component message = packet.getMessage();
             Component newMessage = cleanComponent(message);
-            hasChanged = (message != newMessage);
-            if (hasChanged)
+            if (message != newMessage)
             {
                 packet.setMessage(newMessage);
                 event.markForReEncode(true);
@@ -488,8 +510,7 @@ public final class EffectPacketInterceptor implements PacketListener
             ChatMessage message = packet.getMessage();
             Component content = message.getChatContent();
             Component newContent = cleanComponent(content);
-            hasChanged = (content != newContent);
-            if (hasChanged)
+            if (content != newContent)
             {
                 message.setChatContent(newContent);
                 packet.setMessage(message);
@@ -498,111 +519,46 @@ public final class EffectPacketInterceptor implements PacketListener
         }
     }
 
-    private boolean cleanSlotDisplay(SlotDisplay<?> display)
+    private boolean cleanItemStack(org.bukkit.inventory.ItemStack stack)
     {
-        if (display.getType() == SlotDisplayTypes.ITEM_STACK)
+        boolean result = false;
+        if (!ignoreItems)
         {
-            ItemStackSlotDisplay stackDisplay = (ItemStackSlotDisplay) display;
-            org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(stackDisplay.getStack());
-            if (cleanItemStack(stack))
-            {
-                stackDisplay.setStack(SpigotConversionUtil.fromBukkitItemStack(stack));
-                return true;
-            }
+            result = cleanMaterial(stack);
+        }
+        if (!ignoreEffects)
+        {
+            result |= cleanEffects(stack);
+        }
+        result |= cleanMiscData(stack);
+        return result;
+    }
+
+    private boolean cleanMaterial(org.bukkit.inventory.ItemStack stack)
+    {
+        if (stack == null)
+        {
+            return false;
+        }
+
+        Key key = InternalsManager.getItemMutator().getMaterialKey(stack);
+        if (NetherReactorRegistry.Items.getByKey(key) != null)
+        {
+            ModdedItem moddedItem = NetherReactorRegistry.Items.getByKey(key).getRight();
+            ItemMeta meta = stack.getItemMeta();
+            int amount = stack.getAmount();
+            stack.setType(Material.AIR);
+            stack.setType(moddedItem.getVanillaSettings().getDisguise());
+            stack.setItemMeta(meta);
+            stack.setAmount(amount);
+            //TODO model etc.
+            return true;
         }
 
         return false;
     }
 
-    private Component cleanComponent(Component component)
-    {
-        if (component == null)
-        {
-            return null;
-        }
-
-        if (component.hoverEvent() != null)
-        {
-            if (component.hoverEvent().action() == HoverEvent.Action.SHOW_ITEM)
-            {
-                HoverEvent.ShowItem showItem = (HoverEvent.ShowItem) component.hoverEvent().value();
-                //TODO remove reflection when min version 1.21.11
-                try
-                {
-                    Method deserializeMethod = UnsafeValues.class.getDeclaredMethod("deserializeItemHover", HoverEvent.ShowItem.class);
-                    deserializeMethod.setAccessible(true);
-                    org.bukkit.inventory.ItemStack stack = (org.bukkit.inventory.ItemStack) deserializeMethod.invoke(Bukkit.getUnsafe(), showItem);
-                    if (cleanItemStack(stack))
-                    {
-                        component = component.hoverEvent(stack);
-                    }
-                }
-                catch (Exception ignored)
-                {
-                    //Ignore components I guess
-                    component = component.hoverEvent(Registry.ITEM.get(showItem.item()).createItemStack(showItem.count()));
-                }
-            }
-            else if (component.hoverEvent().action() == HoverEvent.Action.SHOW_TEXT)
-            {
-                Component showText = (Component) component.hoverEvent().value();
-                Component newShowText = cleanComponent(showText);
-                if (showText != newShowText)
-                {
-                    component = component.hoverEvent(newShowText);
-                }
-            }
-        }
-
-        List<Component> newChildren = new ArrayList<>(component.children().size());
-        boolean childrenChanged = false;
-        for (Component child : component.children())
-        {
-            Component cleanedChild = cleanComponent(child);
-            newChildren.add(cleanedChild);
-            if (child != cleanedChild)
-            {
-                childrenChanged = true;
-            }
-        }
-
-        if (childrenChanged)
-        {
-            component = component.children(newChildren);
-        }
-
-        if (component instanceof TranslatableComponent translatable)
-        {
-            List<TranslationArgument> newArgs = new ArrayList<>(translatable.arguments().size());
-            boolean argsChanged = false;
-            for (TranslationArgument arg : translatable.arguments())
-            {
-                if (arg.value() instanceof Component argComponent)
-                {
-                    Component cleanedArg = cleanComponent(argComponent);
-                    newArgs.add(TranslationArgument.component(cleanedArg));
-                    if (argComponent != cleanedArg)
-                    {
-                        argsChanged = true;
-                    }
-                }
-                else
-                {
-                    newArgs.add(arg);
-                }
-            }
-
-            if (argsChanged)
-            {
-                component = translatable.arguments(newArgs);
-            }
-        }
-
-        return component;
-    }
-
-    //Removes non-vanilla effect data from the stack
-    private boolean cleanItemStack(org.bukkit.inventory.ItemStack stack)
+    private boolean cleanEffects(org.bukkit.inventory.ItemStack stack)
     {
         if (stack == null)
         {
@@ -637,12 +593,7 @@ public final class EffectPacketInterceptor implements PacketListener
         {
             boolean hasChanged = false;
             PotionContents potionData = stack.getData(DataComponentTypes.POTION_CONTENTS);
-            ArrayList<org.bukkit.potion.PotionEffect> potionEffects = new ArrayList<>();
-            if (potionData.potion() != null)
-            {
-                potionEffects.addAll(potionData.potion().getPotionEffects());
-            }
-            potionEffects.addAll(potionData.customEffects());
+            ArrayList<org.bukkit.potion.PotionEffect> potionEffects = new ArrayList<>(potionData.customEffects());
             ArrayList<org.bukkit.potion.PotionEffect> removedEffects = new ArrayList<>();
 
             for (int i = 0; i < potionEffects.size(); ++i)
@@ -665,7 +616,7 @@ public final class EffectPacketInterceptor implements PacketListener
                         .potion(potionData.potion());
                 if (potionData.customColor() == null)
                 {
-                    newPotionData.customColor(getPotionColor(potionEffects, removedEffects));
+                    newPotionData.customColor(getPotionColor(potionData.potion(), potionEffects, removedEffects));
                 }
                 else
                 {
@@ -680,7 +631,7 @@ public final class EffectPacketInterceptor implements PacketListener
                 }
                 stack.setData(DataComponentTypes.LORE, ItemLore.lore(lore));
 
-                if (potionEffects.isEmpty())
+                if (potionData.potion() == null && potionEffects.isEmpty())
                 {
                     //TODO remove reflection when 1.21.5 becomes min version
                     try
@@ -797,9 +748,173 @@ public final class EffectPacketInterceptor implements PacketListener
         return result;
     }
 
-    private static Color getPotionColor(ArrayList<org.bukkit.potion.PotionEffect> effects, ArrayList<org.bukkit.potion.PotionEffect> removed)
+    private boolean cleanMiscData(org.bukkit.inventory.ItemStack stack)
     {
-        if (effects.isEmpty() && removed.isEmpty())
+        if (stack == null)
+        {
+            return false;
+        }
+
+        boolean result = false;
+
+        if (stack.hasData(DataComponentTypes.BUNDLE_CONTENTS))
+        {
+            boolean hasChanged = false;
+            List<org.bukkit.inventory.ItemStack> contents = new ArrayList<>(stack.getData(DataComponentTypes.BUNDLE_CONTENTS).contents());
+            for (org.bukkit.inventory.ItemStack bundleItem : contents)
+            {
+                if (cleanItemStack(bundleItem))
+                {
+                    hasChanged = true;
+                }
+            }
+
+            if (hasChanged)
+            {
+                result = true;
+                stack.setData(DataComponentTypes.BUNDLE_CONTENTS, BundleContents.bundleContents(contents));
+            }
+        }
+
+        if (stack.hasData(DataComponentTypes.CONTAINER))
+        {
+            boolean hasChanged = false;
+            List<org.bukkit.inventory.ItemStack> contents = new ArrayList<>(stack.getData(DataComponentTypes.CONTAINER).contents());
+            for (org.bukkit.inventory.ItemStack containerItem : contents)
+            {
+                if (cleanItemStack(containerItem))
+                {
+                    hasChanged = true;
+                }
+            }
+
+            if (hasChanged)
+            {
+                result = true;
+                stack.setData(DataComponentTypes.CONTAINER, ItemContainerContents.containerContents(contents));
+            }
+        }
+
+        return result;
+    }
+
+    private boolean cleanSlotDisplay(SlotDisplay<?> display)
+    {
+        if (display.getType() == SlotDisplayTypes.ITEM)
+        {
+            ItemSlotDisplay itemDisplay = (ItemSlotDisplay) display;
+            com.github.retrooper.packetevents.protocol.item.type.ItemType newType = SpigotConversionUtil.fromBukkitItemMaterial(SpigotConversionUtil.toBukkitItemMaterial(itemDisplay.getItem()));
+            if (!itemDisplay.getItem().equals(newType))
+            {
+                itemDisplay.setItem(newType);
+                return true;
+            }
+        }
+        if (display.getType() == SlotDisplayTypes.ITEM_STACK)
+        {
+            ItemStackSlotDisplay stackDisplay = (ItemStackSlotDisplay) display;
+            org.bukkit.inventory.ItemStack stack = SpigotConversionUtil.toBukkitItemStack(stackDisplay.getStack());
+            if (cleanItemStack(stack))
+            {
+                stackDisplay.setStack(SpigotConversionUtil.fromBukkitItemStack(stack));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Component cleanComponent(Component component)
+    {
+        if (component == null)
+        {
+            return null;
+        }
+
+        if (component.hoverEvent() != null)
+        {
+            if (component.hoverEvent().action() == HoverEvent.Action.SHOW_ITEM)
+            {
+                HoverEvent.ShowItem showItem = (HoverEvent.ShowItem) component.hoverEvent().value();
+
+                //TODO remove reflection when min version 1.21.11
+                try
+                {
+                    Method deserializeMethod = UnsafeValues.class.getDeclaredMethod("deserializeItemHover", HoverEvent.ShowItem.class);
+                    deserializeMethod.setAccessible(true);
+                    org.bukkit.inventory.ItemStack stack = (org.bukkit.inventory.ItemStack) deserializeMethod.invoke(Bukkit.getUnsafe(), showItem);
+                    if (cleanItemStack(stack))
+                    {
+                        component = component.hoverEvent(stack);
+                    }
+                }
+                catch (Exception ignored)
+                {
+                    //Ignore components I guess
+                    component = component.hoverEvent(Registry.ITEM.get(showItem.item()).createItemStack(showItem.count()));
+                }
+            }
+            else if (component.hoverEvent().action() == HoverEvent.Action.SHOW_TEXT)
+            {
+                Component showText = (Component) component.hoverEvent().value();
+                Component newShowText = cleanComponent(showText);
+                if (showText != newShowText)
+                {
+                    component = component.hoverEvent(newShowText);
+                }
+            }
+        }
+
+        List<Component> newChildren = new ArrayList<>(component.children().size());
+        boolean childrenChanged = false;
+        for (Component child : component.children())
+        {
+            Component cleanedChild = cleanComponent(child);
+            newChildren.add(cleanedChild);
+            if (child != cleanedChild)
+            {
+                childrenChanged = true;
+            }
+        }
+
+        if (childrenChanged)
+        {
+            component = component.children(newChildren);
+        }
+
+        if (component instanceof TranslatableComponent translatable)
+        {
+            List<TranslationArgument> newArgs = new ArrayList<>(translatable.arguments().size());
+            boolean argsChanged = false;
+            for (TranslationArgument arg : translatable.arguments())
+            {
+                if (arg.value() instanceof Component argComponent)
+                {
+                    Component cleanedArg = cleanComponent(argComponent);
+                    newArgs.add(TranslationArgument.component(cleanedArg));
+                    if (argComponent != cleanedArg)
+                    {
+                        argsChanged = true;
+                    }
+                }
+                else
+                {
+                    newArgs.add(arg);
+                }
+            }
+
+            if (argsChanged)
+            {
+                component = translatable.arguments(newArgs);
+            }
+        }
+
+        return component;
+    }
+
+    private static Color getPotionColor(PotionType potionType, ArrayList<org.bukkit.potion.PotionEffect> effects, ArrayList<org.bukkit.potion.PotionEffect> removed)
+    {
+        if (potionType == null && effects.isEmpty() && removed.isEmpty())
         {
             return null;
         }
@@ -808,6 +923,25 @@ public final class EffectPacketInterceptor implements PacketListener
         float green = 0F;
         float blue = 0F;
         int numColors = 0;
+
+        if (potionType != null)
+        {
+            for (org.bukkit.potion.PotionEffect effect : potionType.getPotionEffects())
+            {
+                if (!effect.hasParticles())
+                {
+                    continue;
+                }
+                Color color = effect.getType().getColor();
+                for (int i = 0; i <= effect.getAmplifier(); ++i)
+                {
+                    red += color.getRed() / 255F;
+                    green += color.getGreen() / 255F;
+                    blue += color.getBlue() / 255F;
+                    ++numColors;
+                }
+            }
+        }
 
         for (org.bukkit.potion.PotionEffect effect : effects)
         {
@@ -851,7 +985,7 @@ public final class EffectPacketInterceptor implements PacketListener
     private static Component potionEffectToComponent(Key key, int amplifier, Integer length)
     {
         TranslatableComponent.Builder component = translatable().key("effect." + key.namespace() + "." + key.value()).decoration(TextDecoration.ITALIC, false);
-        if (NetherReactorRegistry.Effects.getEffects().get(key).getRight().getCategory() == PotionEffectTypeCategory.HARMFUL)
+        if (NetherReactorRegistry.Effects.get(key).getRight().getCategory() == PotionEffectTypeCategory.HARMFUL)
         {
             component.color(NamedTextColor.RED);
         }

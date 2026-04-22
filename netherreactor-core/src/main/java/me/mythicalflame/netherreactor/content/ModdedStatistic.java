@@ -2,6 +2,8 @@ package me.mythicalflame.netherreactor.content;
 
 import net.kyori.adventure.key.Key;
 
+import javax.annotation.Nonnull;
+
 /**
  * A class representing a modded statistic. Can currently only represent untyped statistics.
  */
@@ -10,6 +12,7 @@ public class ModdedStatistic
     /**
      * The key of the statistic.
      */
+    @Nonnull
     private final Key KEY;
 
     /**
@@ -17,7 +20,7 @@ public class ModdedStatistic
      *
      * @param key The key of this statistic.
      */
-    public ModdedStatistic(Key key)
+    public ModdedStatistic(@Nonnull Key key)
     {
         this.KEY = key;
     }
@@ -27,7 +30,7 @@ public class ModdedStatistic
      *
      * @return The key of this statistic.
      */
-    public Key getKey()
+    public @Nonnull Key getKey()
     {
         return this.KEY;
     }

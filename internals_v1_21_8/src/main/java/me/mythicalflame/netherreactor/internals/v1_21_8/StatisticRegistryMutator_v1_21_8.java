@@ -15,7 +15,6 @@ import net.minecraft.tags.TagKey;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -90,9 +89,8 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
                 unregisteredIntrusiveHolders.set(STATISTICS, null);
 
                 REGISTERED_MINECRAFT_STATS.put(moddedStatisticKey, minecraftLocation);
-                NetherReactorRegistry.Statistics.addName("minecraft.custom:" + moddedStatisticKey.namespace() + "." + moddedStatisticKey.value());
             }
-            catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
+            catch (Exception e)
             {
                 System.err.println("[NetherReactor] Could not inject statistic " + moddedStatisticKey + " into the Minecraft Statistic registry!");
                 e.printStackTrace();

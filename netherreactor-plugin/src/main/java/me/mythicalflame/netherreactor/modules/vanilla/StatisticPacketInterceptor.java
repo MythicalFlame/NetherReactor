@@ -22,6 +22,10 @@ public final class StatisticPacketInterceptor implements PacketListener
 
         if (event.getPacketType() == PacketType.Play.Server.STATISTICS)
         {
+            event.setCancelled(true);
+            //TODO when packet library is fixed
+            //https://github.com/retrooper/packetevents/issues/1491
+            /*
             WrapperPlayServerStatistics packet = new WrapperPlayServerStatistics(event);
 
             Map<String, Integer> stats = packet.getStatistics();
@@ -37,7 +41,7 @@ public final class StatisticPacketInterceptor implements PacketListener
             badNames.forEach(stats::remove);
             packet.setStatistics(stats);
 
-            event.markForReEncode(true);
+            event.markForReEncode(true);*/
         }
     }
 }

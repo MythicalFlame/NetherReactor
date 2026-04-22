@@ -10,7 +10,16 @@ public final class VanillaSupportModule
 {
     public static void activate(NetherReactorPlugin plugin)
     {
-        if (!PacketEventsInjector.inject())
+        boolean itemsEmpty = NetherReactorRegistry.Items.isEmpty();
+        boolean effectsEmpty = NetherReactorRegistry.Effects.isEmpty();
+
+        if (itemsEmpty && effectsEmpty)
+        {
+            plugin.getLogger().severe("No content, not activating vanilla support module.");
+            return;
+        }
+
+        if (!PacketEventsInjector.inject(itemsEmpty, effectsEmpty))
         {
             plugin.getLogger().severe("Could not enable vanilla support module due to an injection error!");
             return;
@@ -18,10 +27,7 @@ public final class VanillaSupportModule
 
         EventManager events = PacketEvents.getAPI().getEventManager();
 
-        if (!NetherReactorRegistry.Effects.isEmpty())
-        {
-            events.registerListener(new EffectPacketInterceptor(), PacketListenerPriority.HIGHEST);
-        }
+        events.registerListener(new ItemStackPacketInterceptor(itemsEmpty, effectsEmpty), PacketListenerPriority.HIGHEST);
 
         if (!NetherReactorRegistry.Statistics.isEmpty())
         {
