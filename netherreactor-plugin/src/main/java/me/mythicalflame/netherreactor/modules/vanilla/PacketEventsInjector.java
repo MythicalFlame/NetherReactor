@@ -21,16 +21,16 @@ import java.util.Map;
 
 public class PacketEventsInjector
 {
-    public static boolean inject(boolean ignoreItems, boolean ignoreEffects)
+    public static boolean inject(boolean ignoreEffects, boolean ignoreItems)
     {
         boolean result = false;
-        if (!ignoreItems)
-        {
-            result = injectItems();
-        }
         if (!ignoreEffects)
         {
             result |= injectEffects();
+        }
+        if (!ignoreItems)
+        {
+            result = injectItems();
         }
         //result |= injectStatistics();
         return result;

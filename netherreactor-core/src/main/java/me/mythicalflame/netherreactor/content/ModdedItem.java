@@ -33,7 +33,7 @@ public class ModdedItem
     public ModdedItem(@Nonnull ItemProperties itemProperties)
     {
         this.ITEM_PROPERTIES = itemProperties;
-        this.VANILLA_SETTINGS = new VanillaModuleSettings(Material.STICK);
+        this.VANILLA_SETTINGS = new VanillaModuleSettings(Material.SHULKER_SHELL);
     }
 
     /**

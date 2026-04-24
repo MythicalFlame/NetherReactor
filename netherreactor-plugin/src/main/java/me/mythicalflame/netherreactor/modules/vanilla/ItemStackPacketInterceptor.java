@@ -79,13 +79,13 @@ import static net.kyori.adventure.text.Component.translatable;
 
 public final class ItemStackPacketInterceptor implements PacketListener
 {
-    private final boolean ignoreItems;
     private final boolean ignoreEffects;
+    private final boolean ignoreItems;
 
-    public ItemStackPacketInterceptor(boolean ignoreItems, boolean ignoreEffects)
+    public ItemStackPacketInterceptor(boolean ignoreEffects, boolean ignoreItems)
     {
-        this.ignoreItems = ignoreItems;
         this.ignoreEffects = ignoreEffects;
+        this.ignoreItems = ignoreItems;
     }
 
     //Stuff not to show in remove effect
@@ -523,13 +523,13 @@ public final class ItemStackPacketInterceptor implements PacketListener
     private boolean cleanItemStack(org.bukkit.inventory.ItemStack stack)
     {
         boolean result = false;
-        if (!ignoreItems)
-        {
-            result = cleanMaterial(stack);
-        }
         if (!ignoreEffects)
         {
-            result |= cleanEffects(stack);
+            result = cleanEffects(stack);
+        }
+        if (!ignoreItems)
+        {
+            result |= cleanMaterial(stack);
         }
         result |= cleanMiscData(stack);
         return result;
@@ -545,6 +545,25 @@ public final class ItemStackPacketInterceptor implements PacketListener
         Key key = InternalsManager.getItemMutator().getMaterialKey(stack);
         if (NetherReactorRegistry.Items.getByKey(key) != null)
         {
+            boolean hasDefaultName;
+            if (!stack.hasData(DataComponentTypes.ITEM_NAME))
+            {
+                hasDefaultName = true;
+            }
+            else
+            {
+                hasDefaultName = stack.getData(DataComponentTypes.ITEM_NAME).equals(translatable("item." + key.namespace() + "." + key.value()));
+            }
+            boolean hasDefaultModel;
+            if (!stack.hasData(DataComponentTypes.ITEM_MODEL))
+            {
+                hasDefaultModel = true;
+            }
+            else
+            {
+                hasDefaultModel = stack.getData(DataComponentTypes.ITEM_MODEL).equals(key);
+            }
+
             ModdedItem moddedItem = NetherReactorRegistry.Items.getByKey(key).getRight();
             ItemMeta meta = stack.getItemMeta();
             int amount = stack.getAmount();
@@ -552,6 +571,7 @@ public final class ItemStackPacketInterceptor implements PacketListener
             stack.setType(moddedItem.getVanillaSettings().getDisguise());
             stack.setItemMeta(meta);
             stack.setAmount(amount);
+
             for (Map.Entry<Key, Object> componentEntry : moddedItem.getItemProperties().getComponents().entrySet())
             {
                 DataComponentType type = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
@@ -573,12 +593,12 @@ public final class ItemStackPacketInterceptor implements PacketListener
                 }
             }
 
-            if (!stack.hasData(DataComponentTypes.ITEM_NAME))
+            if (hasDefaultName)
             {
                 stack.setData(DataComponentTypes.ITEM_NAME, translatable("item." + key.namespace() + "." + key.value()));
             }
 
-            if (!stack.hasData(DataComponentTypes.ITEM_MODEL))
+            if (hasDefaultModel)
             {
                 stack.setData(DataComponentTypes.ITEM_MODEL, key);
             }
