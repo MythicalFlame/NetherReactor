@@ -70,6 +70,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -551,7 +552,37 @@ public final class ItemStackPacketInterceptor implements PacketListener
             stack.setType(moddedItem.getVanillaSettings().getDisguise());
             stack.setItemMeta(meta);
             stack.setAmount(amount);
-            //TODO model etc.
+            for (Map.Entry<Key, Object> componentEntry : moddedItem.getItemProperties().getComponents().entrySet())
+            {
+                DataComponentType type = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
+                if (type == null)
+                {
+                    continue;
+                }
+
+                if (!stack.hasData(type))
+                {
+                    if (type instanceof DataComponentType.NonValued nonValued)
+                    {
+                        stack.setData(nonValued);
+                    }
+                    else if (type instanceof DataComponentType.Valued valued)
+                    {
+                        stack.setData(valued, componentEntry.getValue());
+                    }
+                }
+            }
+
+            if (!stack.hasData(DataComponentTypes.ITEM_NAME))
+            {
+                stack.setData(DataComponentTypes.ITEM_NAME, translatable("item." + key.namespace() + "." + key.value()));
+            }
+
+            if (!stack.hasData(DataComponentTypes.ITEM_MODEL))
+            {
+                stack.setData(DataComponentTypes.ITEM_MODEL, key);
+            }
+
             return true;
         }
 

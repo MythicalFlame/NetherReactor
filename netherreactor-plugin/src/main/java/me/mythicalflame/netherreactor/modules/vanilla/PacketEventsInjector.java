@@ -10,7 +10,6 @@ import com.github.retrooper.packetevents.protocol.stats.Statistic;
 import com.github.retrooper.packetevents.protocol.stats.Statistics;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.util.mappings.VersionedRegistry;
-import io.papermc.paper.datacomponent.DataComponentTypes;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;

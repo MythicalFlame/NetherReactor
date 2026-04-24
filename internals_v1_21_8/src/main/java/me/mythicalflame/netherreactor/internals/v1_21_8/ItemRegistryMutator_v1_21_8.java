@@ -1,40 +1,49 @@
 package me.mythicalflame.netherreactor.internals.v1_21_8;
 
 import io.papermc.paper.datacomponent.PaperDataComponentType;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.LoaderClassPath;
 import me.mythicalflame.netherreactor.content.Mod;
 import me.mythicalflame.netherreactor.registries.AbstractItemRegistryMutator;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
+import net.bytebuddy.agent.ByteBuddyAgent;
 import net.kyori.adventure.key.Key;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistrationInfo;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.ComposterBlock;
+import net.minecraft.world.level.block.entity.FuelValues;
 import org.bukkit.Material;
 import org.bukkit.Registry;
-import org.bukkit.craftbukkit.CraftRegistry;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.instrument.ClassDefinition;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 //Inspired by ItemsAdderBlockInjector
 public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 {
+    private static final Logger log = LoggerFactory.getLogger(ItemRegistryMutator_v1_21_8.class);
     private MappedRegistry<Item> ITEMS;
 
     @Override
@@ -67,7 +76,9 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             return;
         }
 
-        initRegistries();
+        InternalInterface_v1_21_8.initRegistries();
+
+        HashMap<Key, Integer> newFuelMap = new HashMap<>();
 
         mods.forEach(mod -> mod.getRegisteredItems().forEach(moddedItem ->
         {
@@ -99,9 +110,29 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                     }
                 }
 
-                //TODO model and craftRemainder
+                if (moddedItem.getItemProperties().getCraftRemainder() != null)
+                {
+                    Key remainderKey = moddedItem.getItemProperties().getCraftRemainder();
+                    ResourceLocation remainderLocation = ResourceLocation.fromNamespaceAndPath(remainderKey.namespace(), remainderKey.value());
+                    Optional<Holder.Reference<Item>> found = BuiltInRegistries.ITEM.get(remainderLocation);
+                    if (found.isEmpty())
+                    {
+                        throw new IllegalArgumentException("Could not find item " + remainderKey + "while trying to set the craftRemainder for " + moddedItemKey + "!");
+                    }
+                    properties.craftRemainder(found.get().value());
+                }
 
                 minecraftItem = new Item(properties);
+
+                if (moddedItem.getItemProperties().getCompostingChance() != 0.0f)
+                {
+                    ComposterBlock.COMPOSTABLES.put(minecraftItem, moddedItem.getItemProperties().getCompostingChance());
+                }
+
+                if (moddedItem.getItemProperties().getFuelTime() > 0)
+                {
+                    newFuelMap.put(moddedItemKey, moddedItem.getItemProperties().getFuelTime());
+                }
 
                 Method unboundMethod = getUnboundMethod();
                 unboundMethod.setAccessible(true);
@@ -148,7 +179,44 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 
         ITEMS.freeze();
 
-        nullRegistries();
+        if (!newFuelMap.isEmpty())
+        {
+            try
+            {
+                Instrumentation inst = ByteBuddyAgent.install();
+
+                ClassPool pool = ClassPool.getDefault();
+                pool.appendClassPath(new LoaderClassPath(Thread.currentThread().getContextClassLoader()));
+                CtClass ct = pool.get("net.minecraft.world.level.block.entity.FuelValues");
+                CtMethod method = ct.getDeclaredMethod(
+                        "vanillaBurnTimes",
+                        new CtClass[] {
+                                pool.get("net.minecraft.core.HolderLookup$Provider"),
+                                pool.get("net.minecraft.world.flag.FeatureFlagSet"),
+                                CtClass.intType
+                        });
+
+                StringBuilder methodBody = new StringBuilder("{return new net.minecraft.world.level.block.entity.FuelValues.Builder($1, $2)" +
+                        ".add(net.minecraft.world.item.Items.LAVA_BUCKET, $3 * 100).add(net.minecraft.world.level.block.Blocks.COAL_BLOCK, $3 * 8 * 10).add(net.minecraft.world.item.Items.BLAZE_ROD, $3 * 12).add(net.minecraft.world.item.Items.COAL, $3 * 8).add(net.minecraft.world.item.Items.CHARCOAL, $3 * 8).add(net.minecraft.tags.ItemTags.LOGS, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.BAMBOO_BLOCKS, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.PLANKS, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.BAMBOO_MOSAIC, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.WOODEN_STAIRS, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.BAMBOO_MOSAIC_STAIRS, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.WOODEN_SLABS, $3 * 3 / 4).add(net.minecraft.world.level.block.Blocks.BAMBOO_MOSAIC_SLAB, $3 * 3 / 4).add(net.minecraft.tags.ItemTags.WOODEN_TRAPDOORS, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.WOODEN_PRESSURE_PLATES, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.WOODEN_FENCES, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.FENCE_GATES, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.NOTE_BLOCK, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.BOOKSHELF, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.CHISELED_BOOKSHELF, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.LECTERN, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.JUKEBOX, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.CHEST, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.TRAPPED_CHEST, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.CRAFTING_TABLE, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.DAYLIGHT_DETECTOR, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.BANNERS, $3 * 3 / 2).add(net.minecraft.world.item.Items.BOW, $3 * 3 / 2).add(net.minecraft.world.item.Items.FISHING_ROD, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.LADDER, $3 * 3 / 2).add(net.minecraft.tags.ItemTags.SIGNS, $3).add(net.minecraft.tags.ItemTags.HANGING_SIGNS, $3 * 4).add(net.minecraft.world.item.Items.WOODEN_SHOVEL, $3).add(net.minecraft.world.item.Items.WOODEN_SWORD, $3).add(net.minecraft.world.item.Items.WOODEN_HOE, $3).add(net.minecraft.world.item.Items.WOODEN_AXE, $3).add(net.minecraft.world.item.Items.WOODEN_PICKAXE, $3).add(net.minecraft.tags.ItemTags.WOODEN_DOORS, $3).add(net.minecraft.tags.ItemTags.BOATS, $3 * 6).add(net.minecraft.tags.ItemTags.WOOL, $3 / 2).add(net.minecraft.tags.ItemTags.WOODEN_BUTTONS, $3 / 2).add(net.minecraft.world.item.Items.STICK, $3 / 2).add(net.minecraft.tags.ItemTags.SAPLINGS, $3 / 2).add(net.minecraft.world.item.Items.BOWL, $3 / 2).add(net.minecraft.tags.ItemTags.WOOL_CARPETS, 1 + $3 / 3).add(net.minecraft.world.level.block.Blocks.DRIED_KELP_BLOCK, 1 + $3 * 20).add(net.minecraft.world.item.Items.CROSSBOW, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.BAMBOO, $3 / 4).add(net.minecraft.world.level.block.Blocks.DEAD_BUSH, $3 / 2).add(net.minecraft.world.level.block.Blocks.SHORT_DRY_GRASS, $3 / 2).add(net.minecraft.world.level.block.Blocks.TALL_DRY_GRASS, $3 / 2).add(net.minecraft.world.level.block.Blocks.SCAFFOLDING, $3 / 4).add(net.minecraft.world.level.block.Blocks.LOOM, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.BARREL, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.CARTOGRAPHY_TABLE, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.FLETCHING_TABLE, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.SMITHING_TABLE, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.COMPOSTER, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.AZALEA, $3 / 2).add(net.minecraft.world.level.block.Blocks.FLOWERING_AZALEA, $3 / 2).add(net.minecraft.world.level.block.Blocks.MANGROVE_ROOTS, $3 * 3 / 2).add(net.minecraft.world.level.block.Blocks.LEAF_LITTER, $3 / 2).remove(net.minecraft.tags.ItemTags.NON_FLAMMABLE_WOOD)");
+                for (Map.Entry<Key, Integer> fuelEntry : newFuelMap.entrySet())
+                {
+                    Key fuelKey = fuelEntry.getKey();
+                    methodBody.append(".add((net.minecraft.world.item.Item) ((net.minecraft.core.Holder.Reference) net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(\"").append(fuelKey.namespace()).append("\", \"").append(fuelKey.value()).append("\")).get()).value(), $3 * ").append(fuelEntry.getValue()).append("/ 200)");
+                }
+                methodBody.append(".build();}");
+                method.setBody(methodBody.toString());
+
+                inst.redefineClasses(new ClassDefinition(FuelValues.class, ct.toBytecode()));
+
+                ct.detach();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        InternalInterface_v1_21_8.nullRegistries();
     }
 
     private Method getUnboundMethod() throws NoSuchMethodException
@@ -180,114 +248,6 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
         properties.component(type.getHandle(), type.getAdapter().toVanilla(value, type.getHolder()));
     }
     //End Paper internals adaptation
-
-    private void initRegistries()
-    {
-        CraftRegistry.setMinecraftRegistry(new RegistryAccess.ImmutableRegistryAccess(new ArrayList<>(List.of(
-                BuiltInRegistries.GAME_EVENT,
-                BuiltInRegistries.SOUND_EVENT,
-                BuiltInRegistries.FLUID,
-                BuiltInRegistries.MOB_EFFECT,
-                BuiltInRegistries.BLOCK,
-                BuiltInRegistries.ENTITY_TYPE,
-                BuiltInRegistries.ITEM,
-                BuiltInRegistries.POTION,
-                BuiltInRegistries.PARTICLE_TYPE,
-                BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                BuiltInRegistries.CUSTOM_STAT,
-                BuiltInRegistries.CHUNK_STATUS,
-                BuiltInRegistries.RULE_TEST,
-                BuiltInRegistries.RULE_BLOCK_ENTITY_MODIFIER,
-                BuiltInRegistries.POS_RULE_TEST,
-                BuiltInRegistries.MENU,
-                BuiltInRegistries.RECIPE_TYPE,
-                BuiltInRegistries.RECIPE_SERIALIZER,
-                BuiltInRegistries.ATTRIBUTE,
-                BuiltInRegistries.POSITION_SOURCE_TYPE,
-                BuiltInRegistries.COMMAND_ARGUMENT_TYPE,
-                BuiltInRegistries.STAT_TYPE,
-                BuiltInRegistries.VILLAGER_TYPE,
-                BuiltInRegistries.VILLAGER_PROFESSION,
-                BuiltInRegistries.POINT_OF_INTEREST_TYPE,
-                BuiltInRegistries.MEMORY_MODULE_TYPE,
-                BuiltInRegistries.SENSOR_TYPE,
-                BuiltInRegistries.SCHEDULE,
-                BuiltInRegistries.ACTIVITY,
-                BuiltInRegistries.LOOT_POOL_ENTRY_TYPE,
-                BuiltInRegistries.LOOT_FUNCTION_TYPE,
-                BuiltInRegistries.LOOT_CONDITION_TYPE,
-                BuiltInRegistries.LOOT_NUMBER_PROVIDER_TYPE,
-                BuiltInRegistries.LOOT_NBT_PROVIDER_TYPE,
-                BuiltInRegistries.LOOT_SCORE_PROVIDER_TYPE,
-                BuiltInRegistries.FLOAT_PROVIDER_TYPE,
-                BuiltInRegistries.INT_PROVIDER_TYPE,
-                BuiltInRegistries.HEIGHT_PROVIDER_TYPE,
-                BuiltInRegistries.BLOCK_PREDICATE_TYPE,
-                BuiltInRegistries.CARVER,
-                BuiltInRegistries.FEATURE,
-                BuiltInRegistries.STRUCTURE_PLACEMENT,
-                BuiltInRegistries.STRUCTURE_PIECE,
-                BuiltInRegistries.STRUCTURE_TYPE,
-                BuiltInRegistries.PLACEMENT_MODIFIER_TYPE,
-                BuiltInRegistries.BLOCKSTATE_PROVIDER_TYPE,
-                BuiltInRegistries.FOLIAGE_PLACER_TYPE,
-                BuiltInRegistries.TRUNK_PLACER_TYPE,
-                BuiltInRegistries.ROOT_PLACER_TYPE,
-                BuiltInRegistries.TREE_DECORATOR_TYPE,
-                BuiltInRegistries.FEATURE_SIZE_TYPE,
-                BuiltInRegistries.BIOME_SOURCE,
-                BuiltInRegistries.CHUNK_GENERATOR,
-                BuiltInRegistries.MATERIAL_CONDITION,
-                BuiltInRegistries.MATERIAL_RULE,
-                BuiltInRegistries.DENSITY_FUNCTION_TYPE,
-                BuiltInRegistries.BLOCK_TYPE,
-                BuiltInRegistries.STRUCTURE_PROCESSOR,
-                BuiltInRegistries.STRUCTURE_POOL_ELEMENT,
-                BuiltInRegistries.POOL_ALIAS_BINDING_TYPE,
-                BuiltInRegistries.DECORATED_POT_PATTERN,
-                BuiltInRegistries.CREATIVE_MODE_TAB,
-                BuiltInRegistries.TRIGGER_TYPES,
-                BuiltInRegistries.NUMBER_FORMAT_TYPE,
-                BuiltInRegistries.DATA_COMPONENT_TYPE,
-                BuiltInRegistries.ENTITY_SUB_PREDICATE_TYPE,
-                BuiltInRegistries.DATA_COMPONENT_PREDICATE_TYPE,
-                BuiltInRegistries.MAP_DECORATION_TYPE,
-                BuiltInRegistries.ENCHANTMENT_EFFECT_COMPONENT_TYPE,
-                BuiltInRegistries.ENCHANTMENT_LEVEL_BASED_VALUE_TYPE,
-                BuiltInRegistries.ENCHANTMENT_ENTITY_EFFECT_TYPE,
-                BuiltInRegistries.ENCHANTMENT_LOCATION_BASED_EFFECT_TYPE,
-                BuiltInRegistries.ENCHANTMENT_VALUE_EFFECT_TYPE,
-                BuiltInRegistries.ENCHANTMENT_PROVIDER_TYPE,
-                BuiltInRegistries.CONSUME_EFFECT_TYPE,
-                BuiltInRegistries.RECIPE_DISPLAY,
-                BuiltInRegistries.SLOT_DISPLAY,
-                BuiltInRegistries.RECIPE_BOOK_CATEGORY,
-                BuiltInRegistries.TICKET_TYPE,
-                BuiltInRegistries.TEST_ENVIRONMENT_DEFINITION_TYPE,
-                BuiltInRegistries.TEST_INSTANCE_TYPE,
-                BuiltInRegistries.SPAWN_CONDITION_TYPE,
-                BuiltInRegistries.DIALOG_TYPE,
-                BuiltInRegistries.DIALOG_ACTION_TYPE,
-                BuiltInRegistries.INPUT_CONTROL_TYPE,
-                BuiltInRegistries.DIALOG_BODY_TYPE,
-                BuiltInRegistries.TEST_FUNCTION,
-                BuiltInRegistries.REGISTRY))));
-    }
-
-    private void nullRegistries()
-    {
-        try
-        {
-            Field registryField = CraftRegistry.class.getDeclaredField("registry");
-            registryField.setAccessible(true);
-            registryField.set(null, null);
-        }
-        catch (Exception e)
-        {
-            System.err.println("[NetherReactor] Could not empty CraftRegistry!");
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public Key getMaterialKey(org.bukkit.inventory.ItemStack stack)
