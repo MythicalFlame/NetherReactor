@@ -9,23 +9,28 @@ import com.github.retrooper.packetevents.protocol.chat.ChatType;
 import com.github.retrooper.packetevents.protocol.chat.message.ChatMessage;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
+import com.github.retrooper.packetevents.protocol.mapper.MappedEntitySet;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.particle.data.ParticleItemStackData;
 import com.github.retrooper.packetevents.protocol.particle.type.ParticleTypes;
 import com.github.retrooper.packetevents.protocol.player.Equipment;
+import com.github.retrooper.packetevents.protocol.recipe.RecipePropertySet;
 import com.github.retrooper.packetevents.protocol.recipe.SingleInputOptionDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.data.MerchantOffer;
 import com.github.retrooper.packetevents.protocol.recipe.display.FurnaceRecipeDisplay;
+import com.github.retrooper.packetevents.protocol.recipe.display.RecipeDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.RecipeDisplayTypes;
 import com.github.retrooper.packetevents.protocol.recipe.display.ShapedCraftingRecipeDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.ShapelessCraftingRecipeDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.SmithingRecipeDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.StonecutterRecipeDisplay;
+import com.github.retrooper.packetevents.protocol.recipe.display.slot.CompositeSlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.ItemSlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.ItemStackSlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.SlotDisplay;
 import com.github.retrooper.packetevents.protocol.recipe.display.slot.SlotDisplayTypes;
 import com.github.retrooper.packetevents.protocol.util.WeightedList;
+import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import io.papermc.paper.datacomponent.DataComponentBuilder;
@@ -400,6 +405,25 @@ public final class ItemStackPacketInterceptor implements PacketListener
 
             for (WrapperPlayServerRecipeBookAdd.AddEntry entry : added)
             {
+                List<MappedEntitySet<com.github.retrooper.packetevents.protocol.item.type.ItemType>> ingredientList = entry.getContents().getIngredients();
+                if (ingredientList != null)
+                {
+                    for (int i = 0; i < ingredientList.size(); ++i)
+                    {
+                        MappedEntitySet<com.github.retrooper.packetevents.protocol.item.type.ItemType> set = ingredientList.get(i);
+                        ArrayList<com.github.retrooper.packetevents.protocol.item.type.ItemType> newSetList = new ArrayList<>();
+                        List<com.github.retrooper.packetevents.protocol.item.type.ItemType> setEntries = set.getEntities();
+                        if (setEntries != null)
+                        {
+                            for (com.github.retrooper.packetevents.protocol.item.type.ItemType type : set.getEntities())
+                            {
+                                newSetList.add(SpigotConversionUtil.fromBukkitItemMaterial(SpigotConversionUtil.toBukkitItemMaterial(type)));
+                            }
+                            ingredientList.set(i, new MappedEntitySet<>(newSetList));
+                        }
+                    }
+                }
+
                 if (entry.getContents().getDisplay().getType() == RecipeDisplayTypes.STONECUTTER)
                 {
                     StonecutterRecipeDisplay stonecutterDisplay = (StonecutterRecipeDisplay) entry.getContents().getDisplay();
@@ -459,16 +483,127 @@ public final class ItemStackPacketInterceptor implements PacketListener
         else if (event.getPacketType() == PacketType.Play.Server.DECLARE_RECIPES)
         {
             WrapperPlayServerDeclareRecipes packet = new WrapperPlayServerDeclareRecipes(event);
+
+            boolean hasPropertyMapChanged = false;
+            Map<ResourceLocation, RecipePropertySet> propertyMap = packet.getItemSets();
+            for (Map.Entry<ResourceLocation, RecipePropertySet> propertyEntry : propertyMap.entrySet())
+            {
+                Set<com.github.retrooper.packetevents.protocol.item.type.ItemType> itemTypes = propertyEntry.getValue().getItems();
+                Set<com.github.retrooper.packetevents.protocol.item.type.ItemType> newItemTypes = new HashSet<>();
+                boolean hasSetChanged = false;
+                for (com.github.retrooper.packetevents.protocol.item.type.ItemType type : itemTypes)
+                {
+                    com.github.retrooper.packetevents.protocol.item.type.ItemType newType = SpigotConversionUtil.fromBukkitItemMaterial(SpigotConversionUtil.toBukkitItemMaterial(type));
+                    newItemTypes.add(newType);
+                    if (!type.equals(newType))
+                    {
+                        hasSetChanged = true;
+                    }
+                }
+                if (hasSetChanged)
+                {
+                    hasPropertyMapChanged = true;
+                    propertyEntry.getValue().setItems(newItemTypes);
+                }
+            }
+            if (hasPropertyMapChanged)
+            {
+                hasChanged = true;
+                packet.setItemSets(propertyMap);
+            }
+
+            boolean hasStoneCutterChanged = false;
             List<SingleInputOptionDisplay> stonecutterRecipes = packet.getStonecutterRecipes();
             for (SingleInputOptionDisplay stonecutterRecipe : stonecutterRecipes)
             {
+                boolean hasSetChanged = false;
+                MappedEntitySet<com.github.retrooper.packetevents.protocol.item.type.ItemType> input = stonecutterRecipe.getInput();
+                ArrayList<com.github.retrooper.packetevents.protocol.item.type.ItemType> newInputList = new ArrayList<>();
+                for (com.github.retrooper.packetevents.protocol.item.type.ItemType type : input.getEntities())
+                {
+                    com.github.retrooper.packetevents.protocol.item.type.ItemType newType = SpigotConversionUtil.fromBukkitItemMaterial(SpigotConversionUtil.toBukkitItemMaterial(type));
+                    newInputList.add(newType);
+                    if (!type.equals(newType))
+                    {
+                        hasSetChanged = true;
+                        hasStoneCutterChanged = true;
+                    }
+                }
+                if (hasSetChanged)
+                {
+                    stonecutterRecipe.setInput(new MappedEntitySet<>(newInputList));
+                }
                 SlotDisplay<?> display = stonecutterRecipe.getOptionDisplay();
-                hasChanged |= cleanSlotDisplay(display);
+                hasStoneCutterChanged |= cleanSlotDisplay(display);
+            }
+            if (hasStoneCutterChanged)
+            {
+                hasChanged = true;
+                packet.setStonecutterRecipes(stonecutterRecipes);
             }
 
             if (hasChanged)
             {
-                packet.setStonecutterRecipes(stonecutterRecipes);
+                event.markForReEncode(true);
+            }
+        }
+        else if (event.getPacketType() == PacketType.Play.Server.CRAFT_RECIPE_RESPONSE)
+        {
+            WrapperPlayServerCraftRecipeResponse packet = new WrapperPlayServerCraftRecipeResponse(event);
+            RecipeDisplay<?> display = packet.getRecipeDisplay();
+
+            if (display.getType() == RecipeDisplayTypes.STONECUTTER)
+            {
+                StonecutterRecipeDisplay stonecutterDisplay = (StonecutterRecipeDisplay) display;
+                SlotDisplay<?> inputDisplay = stonecutterDisplay.getInput();
+                SlotDisplay<?> resultDisplay = stonecutterDisplay.getResult();
+                hasChanged |= cleanSlotDisplay(inputDisplay);
+                hasChanged |= cleanSlotDisplay(resultDisplay);
+            }
+            else if (display.getType() == RecipeDisplayTypes.CRAFTING_SHAPED)
+            {
+                ShapedCraftingRecipeDisplay craftingDisplay = (ShapedCraftingRecipeDisplay) display;
+                SlotDisplay<?> resultDisplay = craftingDisplay.getResult();
+                hasChanged |= cleanSlotDisplay(resultDisplay);
+                for (SlotDisplay<?> ingredientDisplay : craftingDisplay.getIngredients())
+                {
+                    hasChanged |= cleanSlotDisplay(ingredientDisplay);
+                }
+            }
+            else if (display.getType() == RecipeDisplayTypes.FURNACE)
+            {
+                FurnaceRecipeDisplay furnaceDisplay = (FurnaceRecipeDisplay) display;
+                SlotDisplay<?> fuelDisplay = furnaceDisplay.getFuel();
+                SlotDisplay<?> inputDisplay = furnaceDisplay.getIngredient();
+                SlotDisplay<?> resultDisplay = furnaceDisplay.getResult();
+                hasChanged |= cleanSlotDisplay(fuelDisplay);
+                hasChanged |= cleanSlotDisplay(inputDisplay);
+                hasChanged |= cleanSlotDisplay(resultDisplay);
+            }
+            else if (display.getType() == RecipeDisplayTypes.CRAFTING_SHAPELESS)
+            {
+                ShapelessCraftingRecipeDisplay craftingDisplay = (ShapelessCraftingRecipeDisplay) display;
+                SlotDisplay<?> resultDisplay = craftingDisplay.getResult();
+                hasChanged |= cleanSlotDisplay(resultDisplay);
+                for (SlotDisplay<?> ingredientDisplay : craftingDisplay.getIngredients())
+                {
+                    hasChanged |= cleanSlotDisplay(ingredientDisplay);
+                }
+            }
+            else if (display.getType() == RecipeDisplayTypes.SMITHING)
+            {
+                SmithingRecipeDisplay smithingDisplay = (SmithingRecipeDisplay) display;
+                SlotDisplay<?> baseDisplay = smithingDisplay.getBase();
+                SlotDisplay<?> additionDisplay = smithingDisplay.getAddition();
+                SlotDisplay<?> resultDisplay = smithingDisplay.getResult();
+                hasChanged |= cleanSlotDisplay(baseDisplay);
+                hasChanged |= cleanSlotDisplay(additionDisplay);
+                hasChanged |= cleanSlotDisplay(resultDisplay);
+            }
+
+            if (hasChanged)
+            {
+                packet.setRecipeDisplay(display);
                 event.markForReEncode(true);
             }
         }
@@ -870,6 +1005,16 @@ public final class ItemStackPacketInterceptor implements PacketListener
                 stackDisplay.setStack(SpigotConversionUtil.fromBukkitItemStack(stack));
                 return true;
             }
+        }
+        else if (display.getType() == SlotDisplayTypes.COMPOSITE)
+        {
+            CompositeSlotDisplay compositeDisplay = (CompositeSlotDisplay) display;
+            boolean hasChanged = false;
+            for (SlotDisplay<?> subDisplay : compositeDisplay.getContents())
+            {
+                hasChanged |= cleanSlotDisplay(subDisplay);
+            }
+            return hasChanged;
         }
 
         return false;

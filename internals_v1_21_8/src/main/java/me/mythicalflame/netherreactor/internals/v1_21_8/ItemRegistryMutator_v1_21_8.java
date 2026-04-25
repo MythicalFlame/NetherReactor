@@ -201,6 +201,16 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 for (Map.Entry<Key, Integer> fuelEntry : newFuelMap.entrySet())
                 {
                     Key fuelKey = fuelEntry.getKey();
+                    //A mod could make a bad Key implementation and pass it to do code injection, but they could execute malicious code in the mod itself anyways
+                    //However, might as well still check for it
+                    if (!fuelKey.namespace().matches("^[a-z0-9_.-]*$"))
+                    {
+                        throw new IllegalArgumentException("Item namespace \"" + fuelKey.namespace() + "\" contains illegal characters!");
+                    }
+                    if (!fuelKey.value().matches("^[a-z0-9_.-/]*$"))
+                    {
+                        throw new IllegalArgumentException("Item ID \"" + fuelKey.value() + "\" contains illegal characters!");
+                    }
                     methodBody.append(".add((net.minecraft.world.item.Item) ((net.minecraft.core.Holder.Reference) net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(\"").append(fuelKey.namespace()).append("\", \"").append(fuelKey.value()).append("\")).get()).value(), $3 * ").append(fuelEntry.getValue()).append("/ 200)");
                 }
                 methodBody.append(".build();}");
@@ -212,6 +222,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             }
             catch (Exception e)
             {
+                System.out.println("[NetherReactor] Could not rewrite FuelValues#vanillaBurnTimes!");
                 e.printStackTrace();
             }
         }
