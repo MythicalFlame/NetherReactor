@@ -85,7 +85,7 @@ public class ModdedItem
         /**
          * Sets components when called.
          */
-        private @Nullable Runnable COMPONENT_INIT = () -> {};
+        private @Nonnull Runnable COMPONENT_INIT = () -> {};
         /**
          * The item to transform into after being used as a crafting ingredient.
          * If this is null, the item disappears when used as a crafting ingredient.
