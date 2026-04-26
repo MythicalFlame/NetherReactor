@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * A class representing a modded item.
@@ -81,6 +82,10 @@ public class ModdedItem
          * The components of the item.
          */
         private final @Nonnull HashMap<Key, Object> COMPONENTS = new HashMap<>();
+        /**
+         * Sets components when called.
+         */
+        private @Nullable Runnable COMPONENT_INIT = () -> {};
         /**
          * The item to transform into after being used as a crafting ingredient.
          * If this is null, the item disappears when used as a crafting ingredient.
@@ -161,12 +166,16 @@ public class ModdedItem
          * Adds a valued component to the item.
          *
          * @param type The type of the component as a key.
-         * @param value The value of the component. The type MUST match what Paper's API uses.
+         * @param value The value of the component wrapped in a lambda. The type MUST match what Paper's API uses.
          * @return The same ItemProperties.
          */
-        public @Nonnull ItemProperties setValuedComponent(@Nonnull Key type, @Nonnull Object value)
+        public @Nonnull ItemProperties setValuedComponent(@Nonnull Key type, @Nonnull Supplier<Object> value)
         {
-            this.COMPONENTS.put(type, value);
+            Runnable oldRunnable = this.COMPONENT_INIT;
+            this.COMPONENT_INIT = () -> {
+                oldRunnable.run();
+                this.COMPONENTS.put(type, value.get());
+            };
             return this;
         }
 
@@ -231,6 +240,11 @@ public class ModdedItem
             }
             this.COMPOSTING_CHANCE = chance;
             return this;
+        }
+
+        public void initComponents()
+        {
+            COMPONENT_INIT.run();
         }
     }
 

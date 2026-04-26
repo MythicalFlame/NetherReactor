@@ -95,6 +95,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 
                 Item.Properties properties = new Item.Properties().setId(resourceKey);
 
+                moddedItem.getItemProperties().initComponents();
                 for (Map.Entry<Key, ?> componentEntry : moddedItem.getItemProperties().getComponents().entrySet())
                 {
                     io.papermc.paper.datacomponent.DataComponentType apiType = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());

@@ -50,22 +50,10 @@ public class PacketEventsInjector
 
             HashMap<Key, StaticItemType> injectedItems = new HashMap<>(NetherReactorRegistry.Items.getItemsByIds().size());
             NetherReactorRegistry.Items.getItemsByIds().forEach((id, item) -> {
-                int maxAmount = 64;
-                Object maxStackSizeFound = item.getItemProperties().getComponents().get(Key.key("minecraft", "max_stack_size"));
-                if (maxStackSizeFound != null)
-                {
-                    maxAmount = (int) maxStackSizeFound;
-                }
-                int maxDurability = 1;
-                Object maxDurabilityFound = item.getItemProperties().getComponents().get(Key.key("minecraft", "max_damage"));
-                if (maxDurabilityFound != null)
-                {
-                    maxDurability = (int) maxDurabilityFound;
-                }
                 injectedItems.put(item.getItemProperties().getKey(), new StaticItemType(
                     new CustomTypesBuilderData(new ResourceLocation(item.getItemProperties().getKey()), id),
-                    maxAmount,
-                    maxDurability,
+                    1,
+                    1,
                     null,
                     null,
                     new HashSet<>()));
