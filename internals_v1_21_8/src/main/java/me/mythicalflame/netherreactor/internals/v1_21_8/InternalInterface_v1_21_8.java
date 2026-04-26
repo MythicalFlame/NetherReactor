@@ -18,7 +18,7 @@ public class InternalInterface_v1_21_8 implements AbstractInternalInterface
         return SharedConstants.getProtocolVersion();
     }
 
-    public static void initRegistries()
+    public void initRegistries()
     {
         CraftRegistry.setMinecraftRegistry(new RegistryAccess.ImmutableRegistryAccess(new ArrayList<>(List.of(
                 BuiltInRegistries.GAME_EVENT,
@@ -111,7 +111,7 @@ public class InternalInterface_v1_21_8 implements AbstractInternalInterface
                 BuiltInRegistries.REGISTRY))));
     }
 
-    public static void nullRegistries()
+    public void nullRegistries()
     {
         try
         {

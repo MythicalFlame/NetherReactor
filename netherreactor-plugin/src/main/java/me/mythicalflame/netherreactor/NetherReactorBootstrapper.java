@@ -19,6 +19,7 @@ public class NetherReactorBootstrapper implements PluginBootstrap
     @Override
     public void bootstrap(BootstrapContext context)
     {
+        InternalsManager.getInternalInterface().initRegistries();
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY.newHandler(
                 event -> {
                     //Spark profiler is weird and calls this method when you stop profiling for some reason
@@ -40,6 +41,8 @@ public class NetherReactorBootstrapper implements PluginBootstrap
                     {
                         InternalsManager.getItemMutator().registerItems(MODS);
                     }
+
+                    InternalsManager.getInternalInterface().nullRegistries();
                 }
         ));
     }

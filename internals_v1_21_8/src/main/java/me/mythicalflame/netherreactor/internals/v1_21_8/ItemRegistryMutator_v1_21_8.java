@@ -76,8 +76,6 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             return;
         }
 
-        InternalInterface_v1_21_8.initRegistries();
-
         HashMap<Key, Integer> newFuelMap = new HashMap<>();
 
         mods.forEach(mod -> mod.getRegisteredItems().forEach(moddedItem ->
@@ -226,8 +224,6 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 e.printStackTrace();
             }
         }
-
-        InternalInterface_v1_21_8.nullRegistries();
     }
 
     private Method getUnboundMethod() throws NoSuchMethodException

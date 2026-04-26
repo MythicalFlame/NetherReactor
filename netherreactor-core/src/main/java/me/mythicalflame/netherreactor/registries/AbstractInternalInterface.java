@@ -4,4 +4,6 @@ package me.mythicalflame.netherreactor.registries;
 public interface AbstractInternalInterface
 {
     int getServerProtocolVersion();
+    void initRegistries();
+    void nullRegistries();
 }
