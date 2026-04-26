@@ -51,7 +51,7 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
         {
             unfreezeRegistry();
         }
-        catch (NoSuchFieldException | IllegalAccessException e)
+        catch (Exception e)
         {
             System.err.println("[NetherReactor] Could not initialize statistic registry injector!");
             e.printStackTrace();

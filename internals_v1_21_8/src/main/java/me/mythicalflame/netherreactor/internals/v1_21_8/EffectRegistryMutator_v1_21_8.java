@@ -58,7 +58,7 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
         {
             unfreezeRegistry();
         }
-        catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException e)
+        catch (Exception e)
         {
             System.out.println("[NetherReactor] Could not initialize effect registry injector!");
             e.printStackTrace();

@@ -69,7 +69,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
         {
             unfreezeRegistry();
         }
-        catch (NoSuchFieldException | IllegalAccessException e)
+        catch (Exception e)
         {
             System.err.println("[NetherReactor] Could not initialize item registry injector!");
             e.printStackTrace();
@@ -164,7 +164,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 HashMap<Item, Material> ITEM_MATERIAL = (HashMap<Item, Material>) itemMaterialField.get(null);
                 ITEM_MATERIAL.put(minecraftItem, moddedItem.getVanillaSettings().getDisguise());
             }
-            catch (IllegalAccessException | NoSuchFieldException e)
+            catch (Exception e)
             {
                 System.err.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Bukkit Item->Material registry!");
                 e.printStackTrace();
