@@ -670,80 +670,6 @@ public final class ItemStackPacketInterceptor implements PacketListener
         return result;
     }
 
-    private boolean cleanMaterial(org.bukkit.inventory.ItemStack stack)
-    {
-        if (stack == null)
-        {
-            return false;
-        }
-
-        Key key = InternalsManager.getItemMutator().getMaterialKey(stack);
-        if (NetherReactorRegistry.Items.getByKey(key) != null)
-        {
-            boolean hasDefaultName;
-            if (!stack.hasData(DataComponentTypes.ITEM_NAME))
-            {
-                hasDefaultName = true;
-            }
-            else
-            {
-                hasDefaultName = stack.getData(DataComponentTypes.ITEM_NAME).equals(translatable("item." + key.namespace() + "." + key.value()));
-            }
-            boolean hasDefaultModel;
-            if (!stack.hasData(DataComponentTypes.ITEM_MODEL))
-            {
-                hasDefaultModel = true;
-            }
-            else
-            {
-                hasDefaultModel = stack.getData(DataComponentTypes.ITEM_MODEL).equals(key);
-            }
-
-            ModdedItem moddedItem = NetherReactorRegistry.Items.getByKey(key).getRight();
-            ItemMeta meta = stack.getItemMeta();
-            int amount = stack.getAmount();
-            stack.setType(Material.AIR);
-            stack.setType(moddedItem.getVanillaSettings().getDisguise());
-            stack.setItemMeta(meta);
-            stack.setAmount(amount);
-
-            for (Map.Entry<Key, Object> componentEntry : moddedItem.getItemProperties().getComponents().entrySet())
-            {
-                DataComponentType type = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
-                if (type == null)
-                {
-                    continue;
-                }
-
-                if (!stack.hasData(type))
-                {
-                    if (type instanceof DataComponentType.NonValued nonValued)
-                    {
-                        stack.setData(nonValued);
-                    }
-                    else if (type instanceof DataComponentType.Valued valued)
-                    {
-                        stack.setData(valued, componentEntry.getValue());
-                    }
-                }
-            }
-
-            if (hasDefaultName)
-            {
-                stack.setData(DataComponentTypes.ITEM_NAME, translatable("item." + key.namespace() + "." + key.value()));
-            }
-
-            if (hasDefaultModel)
-            {
-                stack.setData(DataComponentTypes.ITEM_MODEL, key);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
     private boolean cleanEffects(org.bukkit.inventory.ItemStack stack)
     {
         if (stack == null)
@@ -932,6 +858,96 @@ public final class ItemStackPacketInterceptor implements PacketListener
         }
 
         return result;
+    }
+
+    private boolean cleanMaterial(org.bukkit.inventory.ItemStack stack)
+    {
+        if (stack == null)
+        {
+            return false;
+        }
+
+        Key key = InternalsManager.getItemMutator().getMaterialKey(stack);
+        if (NetherReactorRegistry.Items.getByKey(key) != null)
+        {
+            boolean hasDefaultName;
+            if (!stack.hasData(DataComponentTypes.ITEM_NAME))
+            {
+                hasDefaultName = true;
+            }
+            else
+            {
+                hasDefaultName = stack.getData(DataComponentTypes.ITEM_NAME).equals(translatable("item." + key.namespace() + "." + key.value()));
+            }
+            boolean hasDefaultModel;
+            if (!stack.hasData(DataComponentTypes.ITEM_MODEL))
+            {
+                hasDefaultModel = true;
+            }
+            else
+            {
+                hasDefaultModel = stack.getData(DataComponentTypes.ITEM_MODEL).equals(key);
+            }
+
+            ModdedItem moddedItem = NetherReactorRegistry.Items.getByKey(key).getRight();
+            ItemMeta meta = stack.getItemMeta();
+            int amount = stack.getAmount();
+
+            //Don't add removed components back
+            HashMap<Key, Object> componentAddMap = new HashMap<>();
+            for (Map.Entry<Key, Object> componentEntry : moddedItem.getItemProperties().getComponents().entrySet())
+            {
+                DataComponentType componentType = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
+                if (componentType == null)
+                {
+                    continue;
+                }
+                if (!stack.hasData(componentType))
+                {
+                    continue;
+                }
+
+                if (componentType instanceof DataComponentType.NonValued)
+                {
+                    componentAddMap.put(componentEntry.getKey(), componentEntry.getValue());
+                }
+                else if (componentType instanceof DataComponentType.Valued valued && stack.getData(valued).equals(componentEntry.getValue()))
+                {
+                    componentAddMap.put(componentEntry.getKey(), componentEntry.getValue());
+                }
+            }
+
+            stack.setType(Material.AIR);
+            stack.setType(moddedItem.getVanillaSettings().getDisguise());
+            stack.setItemMeta(meta);
+            stack.setAmount(amount);
+
+            for (Map.Entry<Key, Object> componentEntry : componentAddMap.entrySet())
+            {
+                DataComponentType componentType = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
+                switch (componentType)
+                {
+                    case DataComponentType.NonValued nonValued -> stack.setData(nonValued);
+                    case DataComponentType.Valued valued -> stack.setData(valued, componentEntry.getValue());
+                    case null, default -> {}
+                }
+
+            }
+
+            if (hasDefaultName)
+            {
+                stack.setData(DataComponentTypes.ITEM_NAME, translatable("item." + key.namespace() + "." + key.value()));
+            }
+
+            if (hasDefaultModel)
+            {
+                stack.setData(DataComponentTypes.ITEM_MODEL, key);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private boolean cleanMiscData(org.bukkit.inventory.ItemStack stack)
