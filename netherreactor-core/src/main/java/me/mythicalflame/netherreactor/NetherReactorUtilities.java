@@ -9,6 +9,7 @@ import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 
 public final class NetherReactorUtilities
@@ -90,7 +91,13 @@ public final class NetherReactorUtilities
             File configFile = readPath.toFile();
             if (!configFile.exists())
             {
-                FileUtils.copyInputStreamToFile(pluginClass.getResourceAsStream(resourcePath), configFile);
+                InputStream stream = pluginClass.getResourceAsStream(resourcePath);
+                if (stream == null)
+                {
+                    throw new IOException("Could not find resource \"" + resourcePath + "\" in class " + pluginClass.getName());
+                }
+                FileUtils.copyInputStreamToFile(stream, configFile);
+                stream.close();
             }
             this.root = YamlConfigurationLoader.builder().path(readPath).build().load();
         }
