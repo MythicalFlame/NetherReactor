@@ -90,7 +90,7 @@ public final class NetherReactorUtilities
             File configFile = readPath.toFile();
             if (!configFile.exists())
             {
-                FileUtils.copyInputStreamToFile(pluginClass.getResourceAsStream("/config.yml"), configFile);
+                FileUtils.copyInputStreamToFile(pluginClass.getResourceAsStream(resourcePath), configFile);
             }
             this.root = YamlConfigurationLoader.builder().path(readPath).build().load();
         }
