@@ -28,7 +28,6 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
     private MappedRegistry<ResourceLocation> STATISTICS;
     private static final HashMap<Key, ResourceLocation> REGISTERED_MINECRAFT_STATS = new HashMap<>();
 
-    @Override
     public void unfreezeRegistry() throws NoSuchFieldException, IllegalAccessException
     {
         STATISTICS = (MappedRegistry<ResourceLocation>) BuiltInRegistries.CUSTOM_STAT;

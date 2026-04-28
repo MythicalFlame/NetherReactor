@@ -43,10 +43,8 @@ import java.util.Set;
 //Inspired by ItemsAdderBlockInjector
 public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 {
-    private static final Logger log = LoggerFactory.getLogger(ItemRegistryMutator_v1_21_8.class);
     private MappedRegistry<Item> ITEMS;
 
-    @Override
     public void unfreezeRegistry() throws NoSuchFieldException, IllegalAccessException
     {
         ITEMS = (MappedRegistry<Item>) BuiltInRegistries.ITEM;

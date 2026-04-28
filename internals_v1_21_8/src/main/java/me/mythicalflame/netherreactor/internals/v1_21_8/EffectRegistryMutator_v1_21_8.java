@@ -32,7 +32,6 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
     private MappedRegistry<MobEffect> EFFECTS;
     private Constructor<MobEffect> mobEffectConstructor;
 
-    @Override
     public void unfreezeRegistry() throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException
     {
         EFFECTS = (MappedRegistry<MobEffect>) BuiltInRegistries.MOB_EFFECT;
@@ -155,7 +154,7 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
             return null;
         }
 
-        if (attributeKey.equals(org.bukkit.attribute.Attribute.ARMOR)) return Attributes.ARMOR;
+        if (attributeKey.equals(Key.key("minecraft", "armor"))) return Attributes.ARMOR;
         else if (attributeKey.equals(Key.key("minecraft", "armor_toughness"))) return Attributes.ARMOR_TOUGHNESS;
         else if (attributeKey.equals(Key.key("minecraft", "attack_damage"))) return Attributes.ATTACK_DAMAGE;
         else if (attributeKey.equals(Key.key("minecraft", "attack_speed"))) return Attributes.ATTACK_SPEED;

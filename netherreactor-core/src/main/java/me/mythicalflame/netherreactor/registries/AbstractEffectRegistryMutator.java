@@ -4,7 +4,7 @@ import me.mythicalflame.netherreactor.content.Mod;
 
 import java.util.Collection;
 
-public interface AbstractEffectRegistryMutator extends AbstractRegistryMutator
+public interface AbstractEffectRegistryMutator
 {
     void registerEffects(Collection<Mod> mods);
 }

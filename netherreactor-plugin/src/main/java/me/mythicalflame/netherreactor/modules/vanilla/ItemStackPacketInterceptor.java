@@ -518,20 +518,23 @@ public final class ItemStackPacketInterceptor implements PacketListener
             {
                 boolean hasSetChanged = false;
                 MappedEntitySet<com.github.retrooper.packetevents.protocol.item.type.ItemType> input = stonecutterRecipe.getInput();
-                ArrayList<com.github.retrooper.packetevents.protocol.item.type.ItemType> newInputList = new ArrayList<>();
-                for (com.github.retrooper.packetevents.protocol.item.type.ItemType type : input.getEntities())
+                if (input.getEntities() != null)
                 {
-                    com.github.retrooper.packetevents.protocol.item.type.ItemType newType = SpigotConversionUtil.fromBukkitItemMaterial(SpigotConversionUtil.toBukkitItemMaterial(type));
-                    newInputList.add(newType);
-                    if (!type.equals(newType))
+                    ArrayList<com.github.retrooper.packetevents.protocol.item.type.ItemType> newInputList = new ArrayList<>();
+                    for (com.github.retrooper.packetevents.protocol.item.type.ItemType type : input.getEntities())
                     {
-                        hasSetChanged = true;
-                        hasStoneCutterChanged = true;
+                        com.github.retrooper.packetevents.protocol.item.type.ItemType newType = SpigotConversionUtil.fromBukkitItemMaterial(SpigotConversionUtil.toBukkitItemMaterial(type));
+                        newInputList.add(newType);
+                        if (!type.equals(newType))
+                        {
+                            hasSetChanged = true;
+                            hasStoneCutterChanged = true;
+                        }
                     }
-                }
-                if (hasSetChanged)
-                {
-                    stonecutterRecipe.setInput(new MappedEntitySet<>(newInputList));
+                    if (hasSetChanged)
+                    {
+                        stonecutterRecipe.setInput(new MappedEntitySet<>(newInputList));
+                    }
                 }
                 SlotDisplay<?> display = stonecutterRecipe.getOptionDisplay();
                 hasStoneCutterChanged |= cleanSlotDisplay(display);

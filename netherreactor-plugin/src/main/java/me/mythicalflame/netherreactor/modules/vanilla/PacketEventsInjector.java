@@ -49,15 +49,14 @@ public class PacketEventsInjector
             VersionedRegistry<ItemType> registry = (VersionedRegistry<ItemType>) registryField.get(null);
 
             HashMap<Key, StaticItemType> injectedItems = new HashMap<>(NetherReactorRegistry.Items.getItemsByIds().size());
-            NetherReactorRegistry.Items.getItemsByIds().forEach((id, item) -> {
-                injectedItems.put(item.getItemProperties().getKey(), new StaticItemType(
-                    new CustomTypesBuilderData(new ResourceLocation(item.getItemProperties().getKey()), id),
-                    1,
-                    1,
-                    null,
-                    null,
-                    new HashSet<>()));
-            });
+            NetherReactorRegistry.Items.getItemsByIds().forEach((id, item) ->
+                    injectedItems.put(item.getItemProperties().getKey(), new StaticItemType(
+                            new CustomTypesBuilderData(new ResourceLocation(item.getItemProperties().getKey()), id),
+                            1,
+                            1,
+                            null,
+                            null,
+                            new HashSet<>())));
 
             Map<String, ItemType>[] typeNames = (Map<String, ItemType>[]) typeNamesField.get(registry);
             for (Map<String, ItemType> typeNamesEntry : typeNames)
