@@ -8,20 +8,20 @@ import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 
 public final class VanillaSupportModule
 {
-    public static void activate(NetherReactorPlugin plugin)
+    public static void activate()
     {
         boolean effectsEmpty = NetherReactorRegistry.Effects.isEmpty();
         boolean itemsEmpty = NetherReactorRegistry.Items.isEmpty();
 
         if (effectsEmpty && itemsEmpty)
         {
-            plugin.getLogger().severe("No content, not activating vanilla support module.");
+            NetherReactorPlugin.getLoggerStatic().severe("No content, not activating vanilla support module.");
             return;
         }
 
         if (!PacketEventsInjector.inject(effectsEmpty, itemsEmpty))
         {
-            plugin.getLogger().severe("Could not enable vanilla support module due to an injection error!");
+            NetherReactorPlugin.getLoggerStatic().severe("Could not enable vanilla support module due to an injection error!");
             return;
         }
 

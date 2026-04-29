@@ -1,9 +1,11 @@
 package me.mythicalflame.netherreactor.internals.v1_21_8;
 
 import me.mythicalflame.netherreactor.content.Mod;
+import me.mythicalflame.netherreactor.content.ModdedStatistic;
 import me.mythicalflame.netherreactor.registries.AbstractStatisticRegistryMutator;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistrationInfo;
@@ -15,6 +17,7 @@ import net.minecraft.tags.TagKey;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,32 +38,19 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
         Field frozenField = MappedRegistry.class.getDeclaredField("frozen");
         frozenField.setAccessible(true);
         frozenField.set(STATISTICS, false);
-
-        Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
-        allTagsField.setAccessible(true);
-
-        Field frozenTagsField = MappedRegistry.class.getDeclaredField("frozenTags");
-        frozenTagsField.setAccessible(true);
     }
 
     @Override
-    public void registerStatistics(Collection<Mod> mods)
+    public void registerStatistics(Collection<Mod> mods, ComponentLogger logger) throws NoSuchFieldException, IllegalAccessException, InvocationTargetException, NoSuchMethodException
     {
-        try
-        {
-            unfreezeRegistry();
-        }
-        catch (Exception e)
-        {
-            System.err.println("[NetherReactor] Could not initialize statistic registry injector!");
-            e.printStackTrace();
-            return;
-        }
+        unfreezeRegistry();
 
-        mods.forEach(mod -> mod.getRegisteredStatistics().forEach(moddedStatistic -> {
-            Key moddedStatisticKey = moddedStatistic.getKey();
-            try
+        for (Mod mod : mods)
+        {
+            for (ModdedStatistic moddedStatistic : mod.getRegisteredStatistics())
             {
+                Key moddedStatisticKey = moddedStatistic.getKey();
+
                 Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
                 allTagsField.setAccessible(true);
 
@@ -71,9 +61,7 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
                 ResourceLocation minecraftLocation = ResourceLocation.fromNamespaceAndPath(moddedStatisticKey.namespace(), moddedStatisticKey.value());
                 ResourceKey<ResourceLocation> resourceKey = ResourceKey.create(Registries.CUSTOM_STAT, minecraftLocation);
 
-                Method unboundMethod = getUnboundMethod();
-                unboundMethod.setAccessible(true);
-                allTagsField.set(STATISTICS, unboundMethod.invoke(null));
+                allTagsField.set(STATISTICS, InternalInterface_v1_21_8.getUnboundMethod().invoke(null));
 
                 STATISTICS.createIntrusiveHolder(minecraftLocation);
                 Holder<ResourceLocation> holder = STATISTICS.register(resourceKey, minecraftLocation, RegistrationInfo.BUILT_IN);
@@ -88,18 +76,12 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
                 unregisteredIntrusiveHolders.set(STATISTICS, null);
 
                 REGISTERED_MINECRAFT_STATS.put(moddedStatisticKey, minecraftLocation);
-            }
-            catch (Exception e)
-            {
-                System.err.println("[NetherReactor] Could not inject statistic " + moddedStatisticKey + " into the Minecraft Statistic registry!");
-                e.printStackTrace();
-                return;
-            }
 
-            NetherReactorRegistry.Statistics.add(moddedStatistic);
+                NetherReactorRegistry.Statistics.add(moddedStatistic);
 
-            System.out.println("[NetherReactor] Registered statistic " + moddedStatisticKey + " successfully!");
-        }));
+                logger.info("Registered statistic {} successfully!", moddedStatisticKey);
+            }
+        }
 
         STATISTICS.freeze();
     }
@@ -114,18 +96,5 @@ public final class StatisticRegistryMutator_v1_21_8 implements AbstractStatistic
         }
 
         ((CraftPlayer) paperPlayer).getHandle().awardStat(found, amount);
-    }
-
-    private Method getUnboundMethod() throws NoSuchMethodException
-    {
-        for (Class<?> clazz : MappedRegistry.class.getDeclaredClasses())
-        {
-            if (clazz.getSimpleName().equals("TagSet"))
-            {
-                return clazz.getDeclaredMethod("unbound");
-            }
-        }
-
-        throw new IllegalArgumentException("Could not find method TagSet#unbound!");
     }
 }

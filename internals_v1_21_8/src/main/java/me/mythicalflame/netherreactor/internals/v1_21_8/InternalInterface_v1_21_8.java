@@ -2,22 +2,47 @@ package me.mythicalflame.netherreactor.internals.v1_21_8;
 
 import me.mythicalflame.netherreactor.registries.AbstractInternalInterface;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import org.bukkit.craftbukkit.CraftRegistry;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 public class InternalInterface_v1_21_8 implements AbstractInternalInterface
 {
+    private static Method unboundMethod = null;
+
+    static Method getUnboundMethod() throws NoSuchMethodException
+    {
+        if (unboundMethod != null)
+        {
+            return unboundMethod;
+        }
+
+        for (Class<?> clazz : MappedRegistry.class.getDeclaredClasses())
+        {
+            if (clazz.getSimpleName().equals("TagSet"))
+            {
+                unboundMethod = clazz.getDeclaredMethod("unbound");
+                unboundMethod.setAccessible(true);
+                return unboundMethod;
+            }
+        }
+
+        throw new IllegalArgumentException("Could not find method TagSet#unbound!");
+    }
+
     @Override
     public int getServerProtocolVersion()
     {
         return SharedConstants.getProtocolVersion();
     }
 
+    @Override
     public void initRegistries()
     {
         CraftRegistry.setMinecraftRegistry(new RegistryAccess.ImmutableRegistryAccess(new ArrayList<>(List.of(
@@ -111,18 +136,11 @@ public class InternalInterface_v1_21_8 implements AbstractInternalInterface
                 BuiltInRegistries.REGISTRY))));
     }
 
-    public void nullRegistries()
+    @Override
+    public void nullRegistries() throws NoSuchFieldException, IllegalAccessException
     {
-        try
-        {
-            Field registryField = CraftRegistry.class.getDeclaredField("registry");
-            registryField.setAccessible(true);
-            registryField.set(null, null);
-        }
-        catch (Exception e)
-        {
-            System.err.println("[NetherReactor] Could not empty CraftRegistry!");
-            e.printStackTrace();
-        }
+        Field registryField = CraftRegistry.class.getDeclaredField("registry");
+        registryField.setAccessible(true);
+        registryField.set(null, null);
     }
 }

@@ -5,5 +5,5 @@ public interface AbstractInternalInterface
 {
     int getServerProtocolVersion();
     void initRegistries();
-    void nullRegistries();
+    void nullRegistries() throws NoSuchFieldException, IllegalAccessException;
 }

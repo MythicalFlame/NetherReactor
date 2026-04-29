@@ -4,6 +4,7 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.mythicalflame.netherreactor.content.Mod;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,8 @@ public class NetherReactorBootstrapper implements PluginBootstrap
     @Override
     public void bootstrap(BootstrapContext context)
     {
+        ComponentLogger logger = context.getLogger();
+
         InternalsManager.getInternalInterface().initRegistries();
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY.newHandler(
                 event -> {
@@ -29,20 +32,30 @@ public class NetherReactorBootstrapper implements PluginBootstrap
                     }
                     hasAlreadyRun = true;
 
-                    if (doStatisticsExist)
+                    try
                     {
-                        InternalsManager.getStatisticMutator().registerStatistics(MODS);
-                    }
-                    if (doEffectsExist)
-                    {
-                        InternalsManager.getEffectMutator().registerEffects(MODS);
-                    }
-                    if (doItemsExist)
-                    {
-                        InternalsManager.getItemMutator().registerItems(MODS);
-                    }
+                        if (doStatisticsExist)
+                        {
+                            InternalsManager.getStatisticMutator().registerStatistics(MODS, logger);
+                        }
+                        if (doEffectsExist)
+                        {
+                            InternalsManager.getEffectMutator().registerEffects(MODS, logger);
+                        }
+                        if (doItemsExist)
+                        {
+                            InternalsManager.getItemMutator().registerItems(MODS, logger);
+                        }
 
-                    InternalsManager.getInternalInterface().nullRegistries();
+                        InternalsManager.getInternalInterface().nullRegistries();
+                    }
+                    catch (Exception e)
+                    {
+                        logger.error("Exception thrown when trying to load mods:", e);
+                        logger.error("COULD NOT START UP NETHERREACTOR! SHUTTING DOWN SERVER...");
+                        logger.error("If you remove NetherReactor, your data may be deleted since content will no longer exist.");
+                        System.exit(1);
+                    }
                 }
         ));
     }

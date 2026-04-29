@@ -15,7 +15,7 @@ public final class NetherReactorPlugin extends JavaPlugin
     {
         LOGGER = getLogger();
 
-        VanillaSupportModule.activate(this);
+        VanillaSupportModule.activate();
         EnderReactorModule.activate(this);
     }
 

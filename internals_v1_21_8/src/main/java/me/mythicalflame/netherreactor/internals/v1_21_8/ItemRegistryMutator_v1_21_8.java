@@ -6,10 +6,12 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
 import me.mythicalflame.netherreactor.content.Mod;
+import me.mythicalflame.netherreactor.content.ModdedItem;
 import me.mythicalflame.netherreactor.registries.AbstractItemRegistryMutator;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistrationInfo;
@@ -25,12 +27,11 @@ import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,7 +41,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-//Inspired by ItemsAdderBlockInjector
 public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
 {
     private MappedRegistry<Item> ITEMS;
@@ -52,36 +52,21 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
         Field frozenField = MappedRegistry.class.getDeclaredField("frozen");
         frozenField.setAccessible(true);
         frozenField.set(ITEMS, false);
-
-        Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
-        allTagsField.setAccessible(true);
-
-        Field frozenTagsField = MappedRegistry.class.getDeclaredField("frozenTags");
-        frozenTagsField.setAccessible(true);
     }
 
     @Override
-    public void registerItems(Collection<Mod> mods)
+    public void registerItems(Collection<Mod> mods, ComponentLogger logger) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException
     {
-        try
-        {
-            unfreezeRegistry();
-        }
-        catch (Exception e)
-        {
-            System.err.println("[NetherReactor] Could not initialize item registry injector!");
-            e.printStackTrace();
-            return;
-        }
+        unfreezeRegistry();
 
         HashMap<Key, Integer> newFuelMap = new HashMap<>();
 
-        mods.forEach(mod -> mod.getRegisteredItems().forEach(moddedItem ->
+        for (Mod mod : mods)
         {
-            Key moddedItemKey = moddedItem.getItemProperties().getKey();
-            Item minecraftItem;
-            try
+            for (ModdedItem moddedItem : mod.getRegisteredItems())
             {
+                Key moddedItemKey = moddedItem.getItemProperties().getKey();
+
                 Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
                 allTagsField.setAccessible(true);
 
@@ -119,7 +104,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                     properties.craftRemainder(found.get().value());
                 }
 
-                minecraftItem = new Item(properties);
+                Item minecraftItem = new Item(properties);
 
                 if (moddedItem.getItemProperties().getCompostingChance() != 0.0f)
                 {
@@ -131,9 +116,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                     newFuelMap.put(moddedItemKey, moddedItem.getItemProperties().getFuelTime());
                 }
 
-                Method unboundMethod = getUnboundMethod();
-                unboundMethod.setAccessible(true);
-                allTagsField.set(ITEMS, unboundMethod.invoke(null));
+                allTagsField.set(ITEMS, InternalInterface_v1_21_8.getUnboundMethod().invoke(null));
 
                 ITEMS.createIntrusiveHolder(minecraftItem);
                 Holder<Item> holder = ITEMS.register(resourceKey, minecraftItem, RegistrationInfo.BUILT_IN);
@@ -146,33 +129,17 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 bindMethod.invoke(holder, tags);
 
                 unregisteredIntrusiveHolders.set(ITEMS, null);
-            }
-            catch (Exception e)
-            {
-                System.err.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Minecraft Item registry!");
-                e.printStackTrace();
-                return;
-            }
 
-            //Bukkit injector
-            try
-            {
+                //Bukkit injector
                 Field itemMaterialField = CraftMagicNumbers.class.getDeclaredField("ITEM_MATERIAL");
                 itemMaterialField.setAccessible(true);
-                HashMap<Item, Material> ITEM_MATERIAL = (HashMap<Item, Material>) itemMaterialField.get(null);
-                ITEM_MATERIAL.put(minecraftItem, moddedItem.getVanillaSettings().getDisguise());
-            }
-            catch (Exception e)
-            {
-                System.err.println("[NetherReactor] Could not inject item " + moddedItemKey + " into the Bukkit Item->Material registry!");
-                e.printStackTrace();
-                return;
-            }
+                HashMap<Item, Material> itemMaterialMap = (HashMap<Item, Material>) itemMaterialField.get(null);
+                itemMaterialMap.put(minecraftItem, moddedItem.getVanillaSettings().getDisguise());
 
-            NetherReactorRegistry.Items.add(ITEMS.size() - 1, moddedItem);
-
-            System.out.println("[NetherReactor] Registered item " + moddedItemKey + " successfully!");
-        }));
+                NetherReactorRegistry.Items.add(ITEMS.size() - 1, moddedItem);
+                logger.info("Registered item {} successfully!", moddedItemKey);
+            }
+        }
 
         ITEMS.freeze();
 
@@ -219,23 +186,10 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
             }
             catch (Exception e)
             {
-                System.out.println("[NetherReactor] Could not rewrite FuelValues#vanillaBurnTimes!");
-                e.printStackTrace();
+                logger.error("Could not rewrite FuelValues#vanillaBurnTimes:", e);
+                throw new RuntimeException("Could not rewrite FuelValues#vanillaBurnTimes!");
             }
         }
-    }
-
-    private Method getUnboundMethod() throws NoSuchMethodException
-    {
-        for (Class<?> clazz : MappedRegistry.class.getDeclaredClasses())
-        {
-            if (clazz.getSimpleName().equals("TagSet"))
-            {
-                return clazz.getDeclaredMethod("unbound");
-            }
-        }
-
-        throw new IllegalArgumentException("Could not find method TagSet#unbound!");
     }
 
     //Adapted from Paper internals (CraftItemStack)

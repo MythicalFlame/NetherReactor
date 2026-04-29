@@ -1,9 +1,11 @@
 package me.mythicalflame.netherreactor.internals.v1_21_8;
 
 import me.mythicalflame.netherreactor.content.Mod;
+import me.mythicalflame.netherreactor.content.ModdedEffect;
 import me.mythicalflame.netherreactor.registries.AbstractEffectRegistryMutator;
 import me.mythicalflame.netherreactor.registries.NetherReactorRegistry;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.RegistrationInfo;
@@ -21,10 +23,12 @@ import org.bukkit.potion.PotionEffectTypeCategory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMutator
@@ -40,34 +44,21 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
         frozenField.setAccessible(true);
         frozenField.set(EFFECTS, false);
 
-        Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
-        allTagsField.setAccessible(true);
-
-        Field frozenTagsField = MappedRegistry.class.getDeclaredField("frozenTags");
-        frozenTagsField.setAccessible(true);
-
         mobEffectConstructor = MobEffect.class.getDeclaredConstructor(MobEffectCategory.class, int.class);
         mobEffectConstructor.setAccessible(true);
     }
 
     @Override
-    public void registerEffects(Collection<Mod> mods)
+    public void registerEffects(Collection<Mod> mods, ComponentLogger logger) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InstantiationException, InvocationTargetException
     {
-        try
-        {
-            unfreezeRegistry();
-        }
-        catch (Exception e)
-        {
-            System.out.println("[NetherReactor] Could not initialize effect registry injector!");
-            e.printStackTrace();
-            return;
-        }
+        unfreezeRegistry();
 
-        mods.forEach(mod -> mod.getRegisteredEffects().forEach(moddedEffect -> {
-            Key moddedEffectKey = moddedEffect.getKey();
-            try
+        for (Mod mod : mods)
+        {
+            for (ModdedEffect moddedEffect : mod.getRegisteredEffects())
             {
+                Key moddedEffectKey = moddedEffect.getKey();
+
                 Field allTagsField = MappedRegistry.class.getDeclaredField("allTags");
                 allTagsField.setAccessible(true);
 
@@ -82,8 +73,8 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
                     Holder<Attribute> attributeHolder = convertKeyAttribute(entry.getKey());
                     if (attributeHolder == null)
                     {
-                        System.err.println("[NetherReactor] Could not find attribute \"" + entry.getKey() + "\"! Are you using an outdated version of Minecraft?");
-                        return;
+                        logger.error("Could not find attribute {}!", entry.getKey());
+                        throw new NoSuchElementException("Could not find attribute " + entry.getKey() +"!");
                     }
 
                     minecraftEffect.addAttributeModifier(
@@ -93,9 +84,7 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
                             convertPaperAttributeModifierOperation(entry.getValue().getOperation()));
                 });
 
-                Method unboundMethod = getUnboundMethod();
-                unboundMethod.setAccessible(true);
-                allTagsField.set(EFFECTS, unboundMethod.invoke(null));
+                allTagsField.set(EFFECTS, InternalInterface_v1_21_8.getUnboundMethod().invoke(null));
 
                 EFFECTS.createIntrusiveHolder(minecraftEffect);
                 Holder<MobEffect> holder = EFFECTS.register(resourceKey, minecraftEffect, RegistrationInfo.BUILT_IN);
@@ -108,33 +97,13 @@ public class EffectRegistryMutator_v1_21_8 implements AbstractEffectRegistryMuta
                 bindMethod.invoke(holder, tags);
 
                 unregisteredIntrusiveHolders.set(EFFECTS, null);
-            }
-            catch (Exception e)
-            {
-                System.out.println("[NetherReactor] Could not inject effect " + moddedEffectKey + " into the Minecraft Effect registry!");
-                e.printStackTrace();
-                return;
-            }
 
-            NetherReactorRegistry.Effects.add(EFFECTS.size() - 1, moddedEffect);
-
-            System.out.println("[NetherReactor] Registered effect " + moddedEffectKey + " successfully!");
-        }));
-
-        EFFECTS.freeze();
-    }
-
-    private Method getUnboundMethod() throws NoSuchMethodException
-    {
-        for (Class<?> clazz : MappedRegistry.class.getDeclaredClasses())
-        {
-            if (clazz.getSimpleName().equals("TagSet"))
-            {
-                return clazz.getDeclaredMethod("unbound");
+                NetherReactorRegistry.Effects.add(EFFECTS.size() - 1, moddedEffect);
+                logger.info("Registered effect {} successfully!", moddedEffectKey);
             }
         }
 
-        throw new IllegalArgumentException("Could not find method TagSet#unbound!");
+        EFFECTS.freeze();
     }
 
     private static MobEffectCategory convertPaperEffectCategory(PotionEffectTypeCategory paperCategory)
