@@ -81,14 +81,22 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                 moddedItem.getItemProperties().initComponents();
                 for (Map.Entry<Key, ?> componentEntry : moddedItem.getItemProperties().getComponents().entrySet())
                 {
-                    io.papermc.paper.datacomponent.DataComponentType apiType = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
-                    if (apiType instanceof io.papermc.paper.datacomponent.DataComponentType.NonValued nonValued)
+                    try
                     {
-                        setData(properties, nonValued);
+                        io.papermc.paper.datacomponent.DataComponentType apiType = Registry.DATA_COMPONENT_TYPE.get(componentEntry.getKey());
+                        if (apiType instanceof io.papermc.paper.datacomponent.DataComponentType.NonValued nonValued)
+                        {
+                            setData(properties, nonValued);
+                        }
+                        else if (apiType instanceof io.papermc.paper.datacomponent.DataComponentType.Valued valued)
+                        {
+                            setData(properties, valued, componentEntry.getValue());
+                        }
                     }
-                    else if (apiType instanceof io.papermc.paper.datacomponent.DataComponentType.Valued valued)
+                    catch (Exception e)
                     {
-                        setData(properties, valued, componentEntry.getValue());
+                        logger.error("Could not set data for component {}!", componentEntry.getKey(), e);
+                        throw new IllegalArgumentException("Illegal arguments provided for component " + componentEntry.getKey() + "!");
                     }
                 }
 
