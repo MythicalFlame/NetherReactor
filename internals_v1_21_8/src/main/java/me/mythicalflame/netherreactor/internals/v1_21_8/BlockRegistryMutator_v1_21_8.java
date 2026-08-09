@@ -58,7 +58,6 @@ public class BlockRegistryMutator_v1_21_8 implements AbstractBlockRegistryMutato
     @Override
     public void registerBlocks(Collection<Mod> mods, ComponentLogger logger) throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InstantiationException, InvocationTargetException
     {
-        Items
         unfreezeRegistry();
 
         ArrayList<Block> created = new ArrayList<>();
