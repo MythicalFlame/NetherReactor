@@ -1,8 +1,10 @@
 package me.mythicalflame.netherreactor;
+import me.mythicalflame.netherreactor.internals.v1_21_8.BlockRegistryMutator_v1_21_8;
 import me.mythicalflame.netherreactor.internals.v1_21_8.EffectRegistryMutator_v1_21_8;
 import me.mythicalflame.netherreactor.internals.v1_21_8.InternalInterface_v1_21_8;
 import me.mythicalflame.netherreactor.internals.v1_21_8.ItemRegistryMutator_v1_21_8;
 import me.mythicalflame.netherreactor.internals.v1_21_8.StatisticRegistryMutator_v1_21_8;
+import me.mythicalflame.netherreactor.registries.AbstractBlockRegistryMutator;
 import me.mythicalflame.netherreactor.registries.AbstractEffectRegistryMutator;
 import me.mythicalflame.netherreactor.registries.AbstractInternalInterface;
 import me.mythicalflame.netherreactor.registries.AbstractItemRegistryMutator;
@@ -11,9 +13,10 @@ import me.mythicalflame.netherreactor.registries.AbstractStatisticRegistryMutato
 public final class InternalsManager
 {
     private static AbstractInternalInterface internalInterface = null;
-    private static AbstractItemRegistryMutator itemMutator = null;
-    private static AbstractEffectRegistryMutator effectMutator = null;
     private static AbstractStatisticRegistryMutator statisticMutator = null;
+    private static AbstractEffectRegistryMutator effectMutator = null;
+    private static AbstractItemRegistryMutator itemMutator = null;
+    private static AbstractBlockRegistryMutator blockMutator = null;
 
     private InternalsManager() {}
 
@@ -27,14 +30,14 @@ public final class InternalsManager
         return internalInterface;
     }
 
-    public static AbstractItemRegistryMutator getItemMutator()
+    public static AbstractStatisticRegistryMutator getStatisticMutator()
     {
-        if (itemMutator == null)
+        if (statisticMutator == null)
         {
-            itemMutator = new ItemRegistryMutator_v1_21_8();
+            statisticMutator = new StatisticRegistryMutator_v1_21_8();
         }
 
-        return itemMutator;
+        return statisticMutator;
     }
 
     public static AbstractEffectRegistryMutator getEffectMutator()
@@ -47,13 +50,23 @@ public final class InternalsManager
         return effectMutator;
     }
 
-    public static AbstractStatisticRegistryMutator getStatisticMutator()
+    public static AbstractItemRegistryMutator getItemMutator()
     {
-        if (statisticMutator == null)
+        if (itemMutator == null)
         {
-            statisticMutator = new StatisticRegistryMutator_v1_21_8();
+            itemMutator = new ItemRegistryMutator_v1_21_8();
         }
 
-        return statisticMutator;
+        return itemMutator;
+    }
+
+    public static AbstractBlockRegistryMutator getBlockMutator()
+    {
+        if (blockMutator == null)
+        {
+            blockMutator = new BlockRegistryMutator_v1_21_8();
+        }
+
+        return blockMutator;
     }
 }

@@ -21,19 +21,64 @@ import java.util.Map;
 
 public class PacketEventsInjector
 {
-    public static boolean inject(boolean ignoreEffects, boolean ignoreItems)
+    public static boolean inject(boolean ignoreEffects, boolean ignoreItems, boolean ignoreBlocks)
     {
         boolean result = false;
         if (!ignoreEffects)
         {
-            result |= injectEffects();
+            result = injectEffects();
         }
         if (!ignoreItems)
         {
-            result = injectItems();
+            result |= injectItems();
+        }
+        if (!ignoreBlocks)
+        {
+            result |= injectBlocks();
         }
         //result |= injectStatistics();
         return result;
+    }
+
+    private static boolean injectEffects()
+    {
+        try
+        {
+            Field registryField = PotionTypes.class.getDeclaredField("REGISTRY");
+            registryField.setAccessible(true);
+            Field typeNamesField = VersionedRegistry.class.getDeclaredField("typeNames");
+            typeNamesField.setAccessible(true);
+            Field typeIdsField = VersionedRegistry.class.getDeclaredField("typeIds");
+            typeIdsField.setAccessible(true);
+            VersionedRegistry<PotionType> registry = (VersionedRegistry<PotionType>) registryField.get(null);
+
+            HashMap<Key, StaticPotionType> injectedPotions = new HashMap<>(NetherReactorRegistry.Effects.getEffects().size());
+            NetherReactorRegistry.Effects.getEffects().forEach((key, effect) ->
+                    injectedPotions.put(key, new StaticPotionType(new CustomTypesBuilderData(new ResourceLocation(key), effect.getLeft()))));
+
+            Map<String, PotionType>[] typeNames = (Map<String, PotionType>[]) typeNamesField.get(registry);
+            for (Map<String, PotionType> typeNamesEntry : typeNames)
+            {
+                NetherReactorRegistry.Effects.getEffects().forEach((key, effect) ->
+                        typeNamesEntry.put(key.toString(), injectedPotions.get(key)));
+            }
+            typeNamesField.set(registry, typeNames);
+
+            Map<Integer, PotionType>[] typeIds = (Map<Integer, PotionType>[]) typeIdsField.get(registry);
+            for (Map<Integer, PotionType> typeIdsEntry : typeIds)
+            {
+                NetherReactorRegistry.Effects.getEffects().forEach((key, effect) ->
+                        typeIdsEntry.put(effect.getLeft(), injectedPotions.get(key)));
+            }
+            typeIdsField.set(registry, typeIds);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 
     private static boolean injectItems()
@@ -83,35 +128,45 @@ public class PacketEventsInjector
         return true;
     }
 
-    private static boolean injectEffects()
+    private static boolean injectBlocks()
     {
+        return true;
+        /*
         try
         {
-            Field registryField = PotionTypes.class.getDeclaredField("REGISTRY");
+            //TODO
+
+            Field registryField = ItemTypes.class.getDeclaredField("REGISTRY");
             registryField.setAccessible(true);
             Field typeNamesField = VersionedRegistry.class.getDeclaredField("typeNames");
             typeNamesField.setAccessible(true);
             Field typeIdsField = VersionedRegistry.class.getDeclaredField("typeIds");
             typeIdsField.setAccessible(true);
-            VersionedRegistry<PotionType> registry = (VersionedRegistry<PotionType>) registryField.get(null);
+            VersionedRegistry<ItemType> registry = (VersionedRegistry<ItemType>) registryField.get(null);
 
-            HashMap<Key, StaticPotionType> injectedPotions = new HashMap<>(NetherReactorRegistry.Effects.getEffects().size());
-            NetherReactorRegistry.Effects.getEffects().forEach((key, effect) ->
-                    injectedPotions.put(key, new StaticPotionType(new CustomTypesBuilderData(new ResourceLocation(key), effect.getLeft()))));
+            HashMap<Key, StaticItemType> injectedItems = new HashMap<>(NetherReactorRegistry.Items.getItemsByIds().size());
+            NetherReactorRegistry.Items.getItemsByIds().forEach((id, item) ->
+                    injectedItems.put(item.getItemProperties().getKey(), new StaticItemType(
+                            new CustomTypesBuilderData(new ResourceLocation(item.getItemProperties().getKey()), id),
+                            1,
+                            1,
+                            null,
+                            null,
+                            new HashSet<>())));
 
-            Map<String, PotionType>[] typeNames = (Map<String, PotionType>[]) typeNamesField.get(registry);
-            for (Map<String, PotionType> typeNamesEntry : typeNames)
+            Map<String, ItemType>[] typeNames = (Map<String, ItemType>[]) typeNamesField.get(registry);
+            for (Map<String, ItemType> typeNamesEntry : typeNames)
             {
-                NetherReactorRegistry.Effects.getEffects().forEach((key, effect) ->
-                        typeNamesEntry.put(key.toString(), injectedPotions.get(key)));
+                NetherReactorRegistry.Items.getItemsByIds().forEach((id, item) ->
+                        typeNamesEntry.put(item.getItemProperties().getKey().toString(), injectedItems.get(item.getItemProperties().getKey())));
             }
             typeNamesField.set(registry, typeNames);
 
-            Map<Integer, PotionType>[] typeIds = (Map<Integer, PotionType>[]) typeIdsField.get(registry);
-            for (Map<Integer, PotionType> typeIdsEntry : typeIds)
+            Map<Integer, ItemType>[] typeIds = (Map<Integer, ItemType>[]) typeIdsField.get(registry);
+            for (Map<Integer, ItemType> typeIdsEntry : typeIds)
             {
-                NetherReactorRegistry.Effects.getEffects().forEach((key, effect) ->
-                        typeIdsEntry.put(effect.getLeft(), injectedPotions.get(key)));
+                NetherReactorRegistry.Items.getItemsByIds().forEach((id, item) ->
+                        typeIdsEntry.put(id, injectedItems.get(item.getItemProperties().getKey())));
             }
             typeIdsField.set(registry, typeIds);
         }
@@ -121,7 +176,7 @@ public class PacketEventsInjector
             return false;
         }
 
-        return true;
+        return true;*/
     }
 
     private static boolean injectStatistics()
