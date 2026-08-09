@@ -19,7 +19,7 @@ public final class VanillaSupportModule
             return;
         }
 
-        if (!PacketEventsInjector.inject(effectsEmpty, itemsEmpty))
+        if (!PacketEventsInjector.inject(effectsEmpty, itemsEmpty, false))
         {
             NetherReactorPlugin.getLoggerStatic().severe("Could not enable vanilla support module due to an injection error!");
             return;
