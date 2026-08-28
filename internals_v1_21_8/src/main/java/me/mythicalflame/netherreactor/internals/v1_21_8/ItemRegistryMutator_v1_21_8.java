@@ -165,7 +165,7 @@ public class ItemRegistryMutator_v1_21_8 implements AbstractItemRegistryMutator
                         new CtClass[] {
                                 pool.get("net.minecraft.core.HolderLookup$Provider"),
                                 pool.get("net.minecraft.world.flag.FeatureFlagSet"),
-                                CtClass.intType
+                                CtClass.intType,
                         });
 
                 StringBuilder methodBody = new StringBuilder("{return new net.minecraft.world.level.block.entity.FuelValues.Builder($1, $2)" +

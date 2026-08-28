@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.4.1'
+}
+
+def targetJavaVersion = 21
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+dependencies {
+    implementation('net.bytebuddy:byte-buddy-agent:1.18.8')
+    implementation('org.javassist:javassist:3.31.0-GA')
+}
+
+shadowJar {
+    relocate('net.bytebuddy', 'me.mythicalflame.bytebuddy')
+    relocate('javassist', "me.mythicalflame.javassist")
+}

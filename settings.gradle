@@ -21,6 +21,7 @@ plugins {
 rootProject.name = 'NetherReactor'
 
 include(
+        ':netherreactor-instrumentation',
         ':netherreactor-core',
         ':netherreactor-plugin',
         ':internals_v1_21_8'
