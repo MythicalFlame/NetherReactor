@@ -5,16 +5,42 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import me.mythicalflame.netherreactor.instrumentation.Patcher;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 
+/**
+ * Represents a patch that injects into a method.
+ */
+@NullMarked
 public class MethodInjectionPatch extends Patch
 {
+    /**
+     * The method of injection.
+     */
     private final InjectionType INJECTION_TYPE;
+    /**
+     * The name of the method.
+     */
     private final String METHOD_NAME;
+    /**
+     * The names of the classes of the parameters of the method.
+     */
     private final String[] METHOD_PARAMS;
+    /**
+     * The injection content in Javassist format.
+     */
     private final String INJECTION_CONTENT;
 
+    /**
+     * Constructs a patch that injects into a method.
+     *
+     * @param className The full name of the class to patch.
+     * @param injectionType The method of injection.
+     * @param methodName The name of the method.
+     * @param methodParams An array of the full names of the classes of the parameters of the method.
+     * @param injectionContent The content to inject in Javassist format.
+     */
     public MethodInjectionPatch(String className, InjectionType injectionType, String methodName, String[] methodParams, String injectionContent)
     {
         super(className);
@@ -43,9 +69,18 @@ public class MethodInjectionPatch extends Patch
         }
     }
 
+    /**
+     * Represents a method of injecting content.
+     */
     public enum InjectionType
     {
+        /**
+         * Injects before the method's body.
+         */
         BEFORE,
+        /**
+         * Injects after the method's body.
+         */
         AFTER
     }
 }

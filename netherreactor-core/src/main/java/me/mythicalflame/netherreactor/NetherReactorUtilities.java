@@ -3,10 +3,11 @@ package me.mythicalflame.netherreactor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.io.FileUtils;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,6 +61,7 @@ public final class NetherReactorUtilities
     /**
      * A utility class for reading config files during bootstrap.
      */
+    @NullMarked
     public static class ConfigurationManager
     {
         /**
@@ -73,7 +75,7 @@ public final class NetherReactorUtilities
          * @param path The path to read the config from. E.g. Path.of("plugins", name, "config.yml").
          * @throws IOException If the configuration loader cannot build.
          */
-        public ConfigurationManager(@Nonnull Path path) throws IOException
+        public ConfigurationManager(Path path) throws IOException
         {
             this.root = YamlConfigurationLoader.builder().path(path).build().load();
         }
@@ -86,7 +88,7 @@ public final class NetherReactorUtilities
          * @param resourcePath The resource path to copy from if the config file does not exist. E.g. "/config.yml"
          * @throws IOException If the configuration loader cannot build, or the default file cannot be copied.
          */
-        public ConfigurationManager(@Nonnull Path readPath, @Nonnull Class<?> pluginClass, @Nonnull String resourcePath) throws IOException
+        public ConfigurationManager(Path readPath, Class<?> pluginClass, String resourcePath) throws IOException
         {
             File configFile = readPath.toFile();
             if (!configFile.exists())
@@ -244,7 +246,7 @@ public final class NetherReactorUtilities
          * @param path The path.
          * @return The String at the given path.
          */
-        public String getString(Object... path)
+        public @Nullable String getString(Object... path)
         {
             return root.node(path).getString();
         }
@@ -256,7 +258,7 @@ public final class NetherReactorUtilities
          * @param path The path.
          * @return The String at the given path.
          */
-        public String getStringOrDefault(String defaultValue, Object... path)
+        public @Nullable String getStringOrDefault(@Nullable String defaultValue, Object... path)
         {
             return root.node(path).getString(defaultValue);
         }

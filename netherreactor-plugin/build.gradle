@@ -17,6 +17,7 @@ dependencies {
     compileOnly 'com.github.retrooper:packetevents-spigot:2.12.1'
     compileOnly(project(':netherreactor-core'))
     compileOnly(project(':internals_v1_21_8'))
+    compileOnly(project(':netherreactor-instrumentation'))
 }
 
 processResources {

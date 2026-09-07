@@ -2,9 +2,9 @@ package me.mythicalflame.netherreactor.content;
 
 import net.kyori.adventure.key.Key;
 import org.bukkit.Material;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,25 +13,24 @@ import java.util.function.Supplier;
 /**
  * A class representing a modded item.
  */
+@NullMarked
 public class ModdedItem
 {
     /**
      * The properties of the item.
      */
-    @Nonnull
     private final ItemProperties ITEM_PROPERTIES;
     /**
      * The vanilla module settings for the item.
      */
-    @Nonnull
     private final VanillaModuleSettings VANILLA_SETTINGS;
 
     /**
-     * Constructs a ModdedItem with a stick disguise.
+     * Constructs a ModdedItem with a shulker shell disguise.
      *
      * @param itemProperties The properties of this item.
      */
-    public ModdedItem(@Nonnull ItemProperties itemProperties)
+    public ModdedItem(ItemProperties itemProperties)
     {
         this.ITEM_PROPERTIES = itemProperties;
         this.VANILLA_SETTINGS = new VanillaModuleSettings(Material.SHULKER_SHELL);
@@ -43,7 +42,7 @@ public class ModdedItem
      * @param itemProperties The properties of this item.
      * @param vanillaSettings The vanilla module settings for this item.
      */
-    public ModdedItem(@Nonnull ItemProperties itemProperties, @Nonnull VanillaModuleSettings vanillaSettings)
+    public ModdedItem(ItemProperties itemProperties, VanillaModuleSettings vanillaSettings)
     {
         this.ITEM_PROPERTIES = itemProperties;
         this.VANILLA_SETTINGS = vanillaSettings;
@@ -54,7 +53,7 @@ public class ModdedItem
      *
      * @return The properties of this item.
      */
-    public @Nonnull ItemProperties getItemProperties()
+    public ItemProperties getItemProperties()
     {
         return this.ITEM_PROPERTIES;
     }
@@ -64,7 +63,7 @@ public class ModdedItem
      *
      * @return The vanilla module settings for this item.
      */
-    public @Nonnull VanillaModuleSettings getVanillaSettings()
+    public VanillaModuleSettings getVanillaSettings()
     {
         return this.VANILLA_SETTINGS;
     }
@@ -77,15 +76,15 @@ public class ModdedItem
         /**
          * The key of the item.
          */
-        private final @Nonnull Key KEY;
+        private final Key KEY;
         /**
          * The components of the item.
          */
-        private final @Nonnull HashMap<Key, Object> COMPONENTS = new HashMap<>();
+        private final HashMap<Key, Object> COMPONENTS = new HashMap<>();
         /**
          * Sets components when called.
          */
-        private @Nonnull Runnable COMPONENT_INIT = () -> {};
+        private Runnable COMPONENT_INIT = () -> {};
         /**
          * The item to transform into after being used as a crafting ingredient.
          * If this is null, the item disappears when used as a crafting ingredient.
@@ -107,7 +106,7 @@ public class ModdedItem
          *
          * @param key The key for this item.
          */
-        public ItemProperties(@Nonnull Key key)
+        public ItemProperties(Key key)
         {
             this.KEY = key;
         }
@@ -117,7 +116,7 @@ public class ModdedItem
          *
          * @return The key of this item.
          */
-        public @Nonnull Key getKey()
+        public Key getKey()
         {
             return this.KEY;
         }
@@ -127,7 +126,7 @@ public class ModdedItem
          *
          * @return The components of this item.
          */
-        public @Nonnull Map<Key, Object> getComponents()
+        public Map<Key, Object> getComponents()
         {
             return Collections.unmodifiableMap(this.COMPONENTS);
         }
@@ -169,7 +168,7 @@ public class ModdedItem
          * @param value The value of the component wrapped in a lambda. The type MUST match what Paper's API uses.
          * @return The same ItemProperties.
          */
-        public @Nonnull ItemProperties setValuedComponent(@Nonnull Key type, @Nonnull Supplier<Object> value)
+        public ItemProperties setValuedComponent(Key type, Supplier<Object> value)
         {
             Runnable oldRunnable = this.COMPONENT_INIT;
             this.COMPONENT_INIT = () -> {
@@ -185,7 +184,7 @@ public class ModdedItem
          * @param type The type of the component as a key.
          * @return The same ItemProperties.
          */
-        public @Nonnull ItemProperties setNonValuedComponent(@Nonnull Key type)
+        public ItemProperties setNonValuedComponent(Key type)
         {
             this.COMPONENTS.put(type, null);
             return this;
@@ -200,7 +199,7 @@ public class ModdedItem
          *                  As a result, if you want recursion or an item that transforms into itself, you must use events.
          * @return The same ItemProperties.
          */
-        public @Nonnull ItemProperties setCraftRemainder(@Nullable Key remainder)
+        public ItemProperties setCraftRemainder(@Nullable Key remainder)
         {
             if (KEY.equals(remainder))
             {
@@ -216,7 +215,7 @@ public class ModdedItem
          * @param time The length of time, in ticks. A time of 0 disables using this item as fuel.
          * @return The same ItemProperties.
          */
-        public @Nonnull ItemProperties setFuelTime(int time)
+        public ItemProperties setFuelTime(int time)
         {
             if (time < 0)
             {
@@ -232,7 +231,7 @@ public class ModdedItem
          * @param chance The chance of being composted. Must be between 0.0f and 1.0f inclusive. A chance of 0 disables composting.
          * @return The same ItemProperties.
          */
-        public @Nonnull ItemProperties setCompostingChance(float chance)
+        public ItemProperties setCompostingChance(float chance)
         {
             if (chance < 0.0f || chance > 1.0f)
             {
@@ -256,7 +255,6 @@ public class ModdedItem
         /**
          * The Bukkit material to disguise as. Must not be air.
          */
-        @Nonnull
         private final Material DISGUISE;
 
         /**
@@ -264,7 +262,7 @@ public class ModdedItem
          *
          * @param material The Bukkit material to disguise as. Must not be air.
          */
-        public VanillaModuleSettings(@Nonnull Material material)
+        public VanillaModuleSettings(Material material)
         {
             if (material == Material.AIR)
             {
@@ -279,7 +277,7 @@ public class ModdedItem
          *
          * @return The disguise of this item.
          */
-        public @Nonnull Material getDisguise()
+        public Material getDisguise()
         {
             return this.DISGUISE;
         }

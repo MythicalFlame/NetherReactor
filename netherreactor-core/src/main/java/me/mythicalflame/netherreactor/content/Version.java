@@ -3,7 +3,7 @@ package me.mythicalflame.netherreactor.content;
 import java.util.Arrays;
 
 /**
- * This class represents a NetherReactor API version.
+ * This class represents a semantic version.
  *
  * @param major The major version number.
  * @param minor The minor version number.

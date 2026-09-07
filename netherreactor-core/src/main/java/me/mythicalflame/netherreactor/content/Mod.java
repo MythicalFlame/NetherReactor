@@ -1,6 +1,6 @@
 package me.mythicalflame.netherreactor.content;
 
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NullMarked;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,37 +8,32 @@ import java.util.List;
 /**
  * Represents a set of content to add to the game.
  */
+@NullMarked
 public class Mod
 {
     /**
      * The namespace of the mod. May only contain lowercase letters, digits, underscores, periods, and hyphens.
      */
-    @Nonnull
     private final String NAMESPACE;
     /**
      * The version of the mod as a string. The suggested format is "major.minor.patch", such as "1.5.3", but you may also use any string like "beta".
      */
-    @Nonnull
     private final String VERSION;
     /**
      * A list of ModdedEffects this mod will use.
      */
-    @Nonnull
     private final ArrayList<ModdedEffect> EFFECTS = new ArrayList<>();
     /**
      * A list of ModdedItems this mod will use.
      */
-    @Nonnull
     private final ArrayList<ModdedItem> ITEMS = new ArrayList<>();
     /**
      * A list of ModdedBlocks this mod will use.
      */
-    @Nonnull
     private final ArrayList<ModdedBlock> BLOCKS = new ArrayList<>();
     /**
      * A list of ModdedStatistics this mod will use.
      */
-    @Nonnull
     private final ArrayList<ModdedStatistic> STATISTICS = new ArrayList<>();
 
     /**
@@ -47,7 +42,7 @@ public class Mod
      * @param namespace The namespace of this mod. May only contain lowercase letters, digits, underscores, periods, and hyphens.
      * @param version The version of this mod as a string. The suggested format is "major.minor.patch", such as "1.5.3", but you may also use any string like "beta".
      */
-    public Mod(@Nonnull String namespace, @Nonnull String version)
+    public Mod(String namespace, String version)
     {
         if (!namespace.matches("^[a-z0-9_.-]*$"))
         {
@@ -63,7 +58,7 @@ public class Mod
      *
      * @param effect The effect to add.
      */
-    public void addEffect(@Nonnull ModdedEffect effect)
+    public void addEffect(ModdedEffect effect)
     {
         EFFECTS.add(effect);
     }
@@ -73,7 +68,7 @@ public class Mod
      *
      * @param item The item to add.
      */
-    public void addItem(@Nonnull ModdedItem item)
+    public void addItem(ModdedItem item)
     {
         ITEMS.add(item);
     }
@@ -83,7 +78,7 @@ public class Mod
      *
      * @param block The block to add.
      */
-    public void addBlock(@Nonnull ModdedBlock block)
+    public void addBlock(ModdedBlock block)
     {
         BLOCKS.add(block);
     }
@@ -93,7 +88,7 @@ public class Mod
      *
      * @param statistic The statistic to add.
      */
-    public void addStatistic(@Nonnull ModdedStatistic statistic)
+    public void addStatistic(ModdedStatistic statistic)
     {
         STATISTICS.add(statistic);
     }
@@ -103,7 +98,7 @@ public class Mod
      *
      * @return An immutable List of ModdedEffects.
      */
-    public @Nonnull List<ModdedEffect> getRegisteredEffects()
+    public List<ModdedEffect> getRegisteredEffects()
     {
         return Collections.unmodifiableList(EFFECTS);
     }
@@ -113,7 +108,7 @@ public class Mod
      *
      * @return An immutable List of ModdedItems.
      */
-    public @Nonnull List<ModdedItem> getRegisteredItems()
+    public List<ModdedItem> getRegisteredItems()
     {
         return Collections.unmodifiableList(ITEMS);
     }
@@ -123,7 +118,7 @@ public class Mod
      *
      * @return An immutable List of ModdedBlocks.
      */
-    public @Nonnull List<ModdedBlock> getRegisteredBlocks()
+    public List<ModdedBlock> getRegisteredBlocks()
     {
         return Collections.unmodifiableList(BLOCKS);
     }
@@ -133,7 +128,7 @@ public class Mod
      *
      * @return An immutable List of ModdedStatistics.
      */
-    public @Nonnull List<ModdedStatistic> getRegisteredStatistics()
+    public List<ModdedStatistic> getRegisteredStatistics()
     {
         return Collections.unmodifiableList(STATISTICS);
     }
@@ -144,7 +139,7 @@ public class Mod
      * @return The string representing this mod.
      */
     @Override
-    public @Nonnull String toString()
+    public String toString()
     {
         return NAMESPACE + ":" + VERSION;
     }

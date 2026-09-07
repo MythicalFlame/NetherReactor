@@ -1,4 +1,5 @@
 package me.mythicalflame.netherreactor;
+
 import me.mythicalflame.netherreactor.internals.v1_21_8.BlockRegistryMutator_v1_21_8;
 import me.mythicalflame.netherreactor.internals.v1_21_8.EffectRegistryMutator_v1_21_8;
 import me.mythicalflame.netherreactor.internals.v1_21_8.InternalInterface_v1_21_8;

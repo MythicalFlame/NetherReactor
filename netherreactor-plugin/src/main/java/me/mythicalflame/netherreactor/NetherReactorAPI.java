@@ -5,8 +5,8 @@ import org.bukkit.Registry;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
-
-import javax.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Miscellaneous API methods for NetherReactor.
@@ -22,7 +22,7 @@ public final class NetherReactorAPI
      * @param key The key of the statistic.
      * @param amount The value to add to the statistic.
      */
-    public static void awardStatistic(@Nonnull Player player, @Nonnull Key key, int amount)
+    public static void awardStatistic(@NonNull Player player, @NonNull Key key, int amount)
     {
         InternalsManager.getStatisticMutator().awardStatistic(player, key, amount);
     }
@@ -33,7 +33,7 @@ public final class NetherReactorAPI
      * @param stack The stack to get the ItemType for.
      * @return The true ItemType for this stack, or null if it cannot find it for some reason.
      */
-    public static ItemType getItemType(ItemStack stack)
+    public static @Nullable ItemType getItemType(@Nullable ItemStack stack)
     {
         return Registry.ITEM.get(InternalsManager.getItemMutator().getMaterialKey(stack));
     }
@@ -44,7 +44,7 @@ public final class NetherReactorAPI
      * @param stack The stack to get the ItemType for.
      * @return The true ItemType for this stack. If it cannot be found, throws an exception.
      */
-    public static ItemType getItemTypeOrThrow(ItemStack stack)
+    public static @Nullable ItemType getItemTypeOrThrow(@Nullable ItemStack stack)
     {
         return Registry.ITEM.getOrThrow(InternalsManager.getItemMutator().getMaterialKey(stack));
     }

@@ -1,6 +1,5 @@
 package me.mythicalflame.netherreactor.instrumentation;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
@@ -96,9 +95,10 @@ public final class Patcher
         return null;
     }
 
-    public static void patch(Patch patch) throws IOException, NotFoundException, CannotCompileException
+    public static void patch(Patch patch) throws Exception
     {
         CtClass cc = getCtClass(patch.getClassName());
+
         try
         {
             patch.apply(cc);
@@ -110,10 +110,6 @@ public final class Patcher
             {
                 INSTRUMENTATION.redefineClasses(new ClassDefinition(clazz, bytecode));
             }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
         }
         finally
         {

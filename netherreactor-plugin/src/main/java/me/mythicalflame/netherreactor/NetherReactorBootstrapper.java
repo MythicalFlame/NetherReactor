@@ -4,7 +4,10 @@ import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.mythicalflame.netherreactor.content.Mod;
+import me.mythicalflame.netherreactor.instrumentation.Patcher;
+import me.mythicalflame.netherreactor.instrumentation.patches.Patch;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,11 +20,12 @@ public class NetherReactorBootstrapper implements PluginBootstrap
     private static boolean doItemsExist = false;
     private static boolean doBlocksExist = false;
     private static boolean doStatisticsExist = false;
+    private static ComponentLogger LOGGER;
 
     @Override
     public void bootstrap(BootstrapContext context)
     {
-        ComponentLogger logger = context.getLogger();
+        LOGGER = context.getLogger();
 
         InternalsManager.getInternalInterface().initRegistries();
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY.newHandler(
@@ -37,35 +41,40 @@ public class NetherReactorBootstrapper implements PluginBootstrap
                     {
                         if (doEffectsExist)
                         {
-                            InternalsManager.getEffectMutator().registerEffects(MODS, logger);
+                            InternalsManager.getEffectMutator().registerEffects(MODS, LOGGER);
                         }
                         if (doItemsExist)
                         {
-                            InternalsManager.getItemMutator().registerItems(MODS, logger);
+                            InternalsManager.getItemMutator().registerItems(MODS, LOGGER);
                         }
                         if (doBlocksExist)
                         {
-                            InternalsManager.getBlockMutator().registerBlocks(MODS, logger);
+                            InternalsManager.getBlockMutator().registerBlocks(MODS, LOGGER);
                         }
                         if (doStatisticsExist)
                         {
-                            InternalsManager.getStatisticMutator().registerStatistics(MODS, logger);
+                            InternalsManager.getStatisticMutator().registerStatistics(MODS, LOGGER);
                         }
 
                         InternalsManager.getInternalInterface().nullRegistries();
                     }
                     catch (Exception e)
                     {
-                        logger.error("Exception thrown when trying to load mods:", e);
-                        logger.error("COULD NOT START UP NETHERREACTOR! SHUTTING DOWN SERVER...");
-                        logger.error("If you remove NetherReactor, your data may be deleted since content will no longer exist.");
+                        LOGGER.error("Exception thrown when trying to load mods:", e);
+                        LOGGER.error("COULD NOT START UP NETHERREACTOR! SHUTTING DOWN SERVER...");
+                        LOGGER.error("If you remove NetherReactor, your data may be deleted since content will no longer exist.");
                         System.exit(1);
                     }
                 }
         ));
     }
 
-    public static void registerMod(Mod mod)
+    /**
+     * Adds to the list of mods to be registered.
+     *
+     * @param mod The mod to register.
+     */
+    public static void registerMod(@NonNull Mod mod)
     {
         MODS.add(mod);
 
@@ -84,6 +93,23 @@ public class NetherReactorBootstrapper implements PluginBootstrap
         if (!mod.getRegisteredStatistics().isEmpty())
         {
             doStatisticsExist = true;
+        }
+    }
+
+    /**
+     * Attempts to apply a patch to a class.
+     *
+     * @param patch The patch to apply.
+     */
+    public static void registerPatch(@NonNull Patch patch)
+    {
+        try
+        {
+            Patcher.patch(patch);
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Could not register patch on {} because of {}", patch.getClassName(), e);
         }
     }
 }

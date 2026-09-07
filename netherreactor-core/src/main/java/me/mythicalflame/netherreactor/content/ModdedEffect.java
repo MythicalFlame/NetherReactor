@@ -6,8 +6,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectTypeCategory;
+import org.jspecify.annotations.NullMarked;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,27 +16,24 @@ import java.util.Map;
 /**
  * A class representing a modded effect.
  */
+@NullMarked
 public class ModdedEffect
 {
     /**
      * The key of the effect.
      */
-    @Nonnull
     private final Key KEY;
     /**
      * The category of the effect.
      */
-    @Nonnull
     private final PotionEffectTypeCategory CATEGORY;
     /**
      * The color of the particles for the effect.
      */
-    @Nonnull
     private final Color COLOR;
     /**
      * The list of attribute modifiers for the effect.
      */
-    @Nonnull
     private final List<Map.Entry<Key, AttributeModifier>> ATTRIBUTES = new ArrayList<>();
 
     /**
@@ -46,7 +43,7 @@ public class ModdedEffect
      * @param category The category of this effect.
      * @param color The hex color of the particles for this effect.
      */
-    public ModdedEffect(@Nonnull Key key, @Nonnull PotionEffectTypeCategory category, int color)
+    public ModdedEffect(Key key, PotionEffectTypeCategory category, int color)
     {
         this.KEY = key;
         this.CATEGORY = category;
@@ -60,7 +57,7 @@ public class ModdedEffect
      * @param category The category of this effect.
      * @param color The color of the particles for this effect.
      */
-    public ModdedEffect(@Nonnull Key key, @Nonnull PotionEffectTypeCategory category, @Nonnull Color color)
+    public ModdedEffect(Key key, PotionEffectTypeCategory category, Color color)
     {
         this.KEY = key;
         this.CATEGORY = category;
@@ -72,7 +69,7 @@ public class ModdedEffect
      *
      * @return The key of this effect.
      */
-    public @Nonnull Key getKey()
+    public Key getKey()
     {
         return this.KEY;
     }
@@ -82,7 +79,7 @@ public class ModdedEffect
      *
      * @return The category of this effect.
      */
-    public @Nonnull PotionEffectTypeCategory getCategory()
+    public PotionEffectTypeCategory getCategory()
     {
         return this.CATEGORY;
     }
@@ -92,7 +89,7 @@ public class ModdedEffect
      *
      * @return The color of the particles for this effect.
      */
-    public @Nonnull Color getColor()
+    public Color getColor()
     {
         return this.COLOR;
     }
@@ -112,7 +109,7 @@ public class ModdedEffect
      *
      * @return An immutable List of pairs of Keys (attributes) and AttributeModifiers.
      */
-    public @Nonnull List<Map.Entry<Key, AttributeModifier>> getAttributes()
+    public List<Map.Entry<Key, AttributeModifier>> getAttributes()
     {
         return Collections.unmodifiableList(ATTRIBUTES);
     }
@@ -124,7 +121,7 @@ public class ModdedEffect
      * @param modifier The modifier to add.
      * @return The same ModdedEffect.
      */
-    public @Nonnull ModdedEffect addAttributeModifier(@Nonnull Key attribute, @Nonnull AttributeModifier modifier)
+    public ModdedEffect addAttributeModifier(Key attribute, AttributeModifier modifier)
     {
         ATTRIBUTES.add(Map.entry(attribute, modifier));
         return this;
@@ -139,7 +136,7 @@ public class ModdedEffect
      * @param operation The operation for this modifier.
      * @return The same ModdedEffect.
      */
-    public @Nonnull ModdedEffect addAttributeModifier(@Nonnull Key attribute, @Nonnull NamespacedKey key, double value, @Nonnull AttributeModifier.Operation operation)
+    public ModdedEffect addAttributeModifier(Key attribute, NamespacedKey key, double value, AttributeModifier.Operation operation)
     {
         ATTRIBUTES.add(Map.entry(attribute, new AttributeModifier(key, value, operation)));
         return this;
@@ -151,7 +148,7 @@ public class ModdedEffect
      * @param player The player that is receiving the effect.
      * @return Whether or not to display that this effect was removed.
      */
-    public boolean displayRemoved(@Nonnull Player player)
+    public boolean displayRemoved(Player player)
     {
         return true;
     }
@@ -167,7 +164,7 @@ public class ModdedEffect
      * @param showIcon Whether or not the effect's icon shows.
      * @return Whether or not to display that this effect was updated.
      */
-    public boolean displayUpdated(@Nonnull Player player, int amplifier, int duration, boolean ambient, boolean showParticles, boolean showIcon)
+    public boolean displayUpdated(Player player, int amplifier, int duration, boolean ambient, boolean showParticles, boolean showIcon)
     {
         return showParticles || showIcon;
     }

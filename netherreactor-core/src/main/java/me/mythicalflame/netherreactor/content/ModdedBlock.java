@@ -1,10 +1,13 @@
 package me.mythicalflame.netherreactor.content;
 
 import net.kyori.adventure.key.Key;
+import org.jspecify.annotations.NonNull;
 
-import javax.annotation.Nonnull;
 import java.util.function.Function;
 
+/**
+ * A class representing a modded block. Not yet ready for usage, so documentation does not really exist yet.
+ */
 public class ModdedBlock
 {
     private final ModdedBlockState[] STATE_LIST;
@@ -28,7 +31,7 @@ public class ModdedBlock
 
     public static class BlockProperties
     {
-        private final @Nonnull Key KEY;
+        private final @NonNull Key KEY;
         private Function<BlockStateContext, String> mapColorFunction = null;
         private Boolean hasNoCollision = null;
         private Boolean hasNoOcclusion = null;
@@ -48,12 +51,12 @@ public class ModdedBlock
         private Float destroyTime = null;
         private Float explosionResistance = null;
 
-        public BlockProperties(Key key)
+        public BlockProperties(@NonNull Key key)
         {
             this.KEY = key;
         }
 
-        public Key getKey()
+        public @NonNull Key getKey()
         {
             return this.KEY;
         }
