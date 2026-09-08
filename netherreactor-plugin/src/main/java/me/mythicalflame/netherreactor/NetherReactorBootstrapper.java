@@ -55,8 +55,10 @@ public class NetherReactorBootstrapper implements PluginBootstrap
                         {
                             InternalsManager.getStatisticMutator().registerStatistics(MODS, LOGGER);
                         }
-
-                        InternalsManager.getInternalInterface().nullRegistries();
+                        if (doEffectsExist || doItemsExist || doBlocksExist || doStatisticsExist)
+                        {
+                            InternalsManager.getInternalInterface().nullRegistries();
+                        }
                     }
                     catch (Exception e)
                     {
