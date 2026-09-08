@@ -258,7 +258,7 @@ public final class NetherReactorUtilities
          * @param path The path.
          * @return The String at the given path.
          */
-        public @Nullable String getStringOrDefault(@Nullable String defaultValue, Object... path)
+        public String getStringOrDefault(String defaultValue, Object... path)
         {
             return root.node(path).getString(defaultValue);
         }

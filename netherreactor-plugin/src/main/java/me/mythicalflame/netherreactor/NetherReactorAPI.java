@@ -44,7 +44,7 @@ public final class NetherReactorAPI
      * @param stack The stack to get the ItemType for.
      * @return The true ItemType for this stack. If it cannot be found, throws an exception.
      */
-    public static @Nullable ItemType getItemTypeOrThrow(@Nullable ItemStack stack)
+    public static ItemType getItemTypeOrThrow(@Nullable ItemStack stack)
     {
         return Registry.ITEM.getOrThrow(InternalsManager.getItemMutator().getMaterialKey(stack));
     }

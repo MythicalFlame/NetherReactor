@@ -80,7 +80,7 @@ public class ModdedItem
         /**
          * The components of the item.
          */
-        private final HashMap<Key, Object> COMPONENTS = new HashMap<>();
+        private final HashMap<Key, @Nullable Object> COMPONENTS = new HashMap<>();
         /**
          * Sets components when called.
          */
